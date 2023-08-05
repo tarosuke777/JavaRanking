@@ -1,3 +1,4 @@
+package ranking;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
@@ -13,13 +14,26 @@ import java.util.stream.Stream;
 public class Ranking {
 
 	public static void main(String[] args) throws IOException {
+		
+		Path scoreLogData = Paths.get(args[0]);
+				
+		Map<String, Integer> playerLogData = getPlayLogData(scoreLogData);
+		
+		playerLogData = sortPlayLogData(playerLogData);
+		
+		String rankingData = getRankingData(playerLogData);
+		
+		outputRankingData(rankingData);
+	}
+	
+	private static void outputRankingData(String rankingData) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("rank,id,totalScore" + System.lineSeparator());
-		sb.append(addRankToString(sort(sum(Paths.get(args[0])))));
+		sb.append(rankingData);
 		System.out.println(sb.toString());
 	}
 
-	protected static String addRankToString(Map<String, Integer> sortedPlayerIdWithSumScore) {
+	protected static String getRankingData(Map<String, Integer> sortedPlayerIdWithSumScore) {
 		int rank = 0;
 		int rankScore = 0;
 		StringBuilder sb = new StringBuilder();
@@ -37,12 +51,12 @@ public class Ranking {
 		return sb.toString();
 	}
 
-	protected static Map<String, Integer> sort(Map<String, Integer> playerIdWithSumScore) {
+	protected static Map<String, Integer> sortPlayLogData(Map<String, Integer> playerIdWithSumScore) {
 		return playerIdWithSumScore.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
 				.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 	}
 
-	protected static Map<String, Integer> sum(Path path) throws IOException {
+	protected static Map<String, Integer> getPlayLogData(Path path) throws IOException {
 		try (Stream<String> stream = Files.lines(path)) {
 			return stream.skip(1) // header
 					.map(line -> line.split(","))
