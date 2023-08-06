@@ -23,9 +23,7 @@ public class Ranking {
     var gameScoreLogPath = Paths.get(args[1]);
 
     Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
-    List<String> gameScoreLogData = gameScoreLogData(gameScoreLogPath);
-
-    Map<String, Integer> playerLogData = getPlayLogData(gameScoreLogData);
+    Map<String, Integer> playerLogData = getPlayLogData(gameScoreLogPath);
 
     playerLogData = sortPlayLogData(playerLogData);
 
@@ -53,22 +51,12 @@ public class Ranking {
    * @param scoreLogFilePath
    * @return プレイヤーログデータ
    */
-  private static List<String> gameScoreLogData(Path gameScoreLogPath) throws IOException {
+  private static Map<String, Integer> getPlayLogData(Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
-      return lines.collect(Collectors.toList());
+      return lines.skip(1) // header
+          .map(line -> line.split(",")).collect(
+              groupingBy(values -> values[1], summingInt(values -> Integer.parseInt(values[2]))));
     }
-  }
-
-  /**
-   * playerId毎にスコアを集計したプレイヤーログデータを取得
-   * 
-   * @param scoreLogFilePath
-   * @return プレイヤーログデータ
-   */
-  private static Map<String, Integer> getPlayLogData(List<String> scoreLogData) throws IOException {
-    return scoreLogData.stream().skip(1) // header
-        .map(line -> line.split(",")).collect(
-            groupingBy(values -> values[1], summingInt(values -> Integer.parseInt(values[2]))));
   }
 
   /**
