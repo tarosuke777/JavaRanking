@@ -10,9 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
@@ -21,7 +21,9 @@ public class Ranking {
 
     var scoreLogFilePath = Paths.get(args[0]);
 
-    Map<String, Integer> playerLogData = getPlayLogData(scoreLogFilePath);
+    List<String> scoreLogData = getScoreLogData(scoreLogFilePath);
+
+    Map<String, Integer> playerLogData = getPlayLogData(scoreLogData);
 
     playerLogData = sortPlayLogData(playerLogData);
 
@@ -36,13 +38,22 @@ public class Ranking {
    * @param scoreLogFilePath
    * @return プレイヤーログデータ
    */
-  private static Map<String, Integer> getPlayLogData(Path scoreLogFilePath) throws IOException {
+  private static List<String> getScoreLogData(Path scoreLogFilePath) throws IOException {
     try (Stream<String> data = Files.lines(scoreLogFilePath)) {
-      return data.skip(1) // header
-          .map(line -> line.split(",")).collect(
-              groupingBy(values -> values[1], summingInt(values -> Integer.parseInt(values[2]))));
-
+      return data.collect(Collectors.toList());
     }
+  }
+
+  /**
+   * playerId毎にスコアを集計したプレイヤーログデータを取得
+   * 
+   * @param scoreLogFilePath
+   * @return プレイヤーログデータ
+   */
+  private static Map<String, Integer> getPlayLogData(List<String> scoreLogData) throws IOException {
+    return scoreLogData.stream().skip(1) // header
+        .map(line -> line.split(",")).collect(
+            groupingBy(values -> values[1], summingInt(values -> Integer.parseInt(values[2]))));
   }
 
   /**
