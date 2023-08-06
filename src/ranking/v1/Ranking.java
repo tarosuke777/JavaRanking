@@ -39,8 +39,8 @@ public class Ranking {
    * @return プレイヤーログデータ
    */
   private static List<String> getScoreLogData(Path scoreLogFilePath) throws IOException {
-    try (Stream<String> data = Files.lines(scoreLogFilePath)) {
-      return data.collect(Collectors.toList());
+    try (Stream<String> lines = Files.lines(scoreLogFilePath)) {
+      return lines.collect(Collectors.toList());
     }
   }
 
