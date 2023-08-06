@@ -1,5 +1,8 @@
 package test.ranking.v1;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.function.Executable;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,7 +17,7 @@ import ranking.v1.Ranking;
 class RankingTest {
 
 	@Test
-	void mainTest() throws IOException {
+	void mainTest_³íŒn() throws IOException {
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(out));
@@ -26,4 +29,11 @@ class RankingTest {
 		String exp = Files.readString(path);
 		assertEquals(exp, out.toString());
 	}
+	
+	@Test
+	void mainTest_ˆÙíŒn_ˆø”NULL() throws IOException {
+		NullPointerException e = assertThrows(NullPointerException.class, () -> {Ranking.main(null);});
+		assertEquals("Cannot load from object array because \"args\" is null", e.getMessage());
+	}
+	
 }
