@@ -98,9 +98,12 @@ public class Ranking {
     return rankingData;
   }
 
-  private static void outputRankingData(List<String> rankingData) throws IOException {
-    System.out.println("rank,player_id,handle_name,score");
-    rankingData.forEach(line -> System.out.println(line));
+  private static void outputRankingData(List<String> rankingData) throws IOException { 
+    String lineFeedCode = "\n";
+    StringBuilder sb = new StringBuilder();
+    sb.append("rank,player_id,handle_name,score" + lineFeedCode);
+    rankingData.forEach(line -> sb.append(line + lineFeedCode));
+    System.out.print(sb.toString());
   }
 
 }
