@@ -82,8 +82,11 @@ public class Ranking {
   }
 
   private static void outputRankingData(List<String> rankingData) throws IOException {
-    System.out.println("rank,id,totalScore");
-    rankingData.forEach(line -> System.out.println(line));
+    String lineFeedCode = "\n";
+    StringBuilder sb = new StringBuilder();
+    sb.append("rank,id,totalScore" + lineFeedCode);
+    rankingData.forEach(line -> sb.append(line + lineFeedCode));
+    System.out.print(sb.toString());
   }
 
 }
