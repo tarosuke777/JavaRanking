@@ -15,21 +15,27 @@ import java.util.stream.Stream;
 
 public class Ranking {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
+    try {
+      validateArgs(args);
 
-    validateArgs(args);
+      Path gameEntryLogPath = Paths.get(args[0]);
+      Path gameScoreLogPath = Paths.get(args[1]);
 
-    Path gameEntryLogPath = Paths.get(args[0]);
-    Path gameScoreLogPath = Paths.get(args[1]);
+      Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
+      Map<String, Integer> playerLogData = getPlayLogData(gameScoreLogPath);
 
-    Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
-    Map<String, Integer> playerLogData = getPlayLogData(gameScoreLogPath);
+      playerLogData = sortPlayLogData(playerLogData);
 
-    playerLogData = sortPlayLogData(playerLogData);
+      List<String> rankingData = getRankingData(playerLogData, gameEntryLogData);
 
-    List<String> rankingData = getRankingData(playerLogData, gameEntryLogData);
+      outputRankingData(rankingData);
 
-    outputRankingData(rankingData);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+
   }
 
   /**
