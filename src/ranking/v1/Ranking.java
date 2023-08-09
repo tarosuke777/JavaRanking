@@ -3,7 +3,6 @@ package ranking.v1;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
@@ -66,17 +64,17 @@ public class Ranking {
    */
   private static List<String> getRankingData(Map<String, Integer> playerLogData) {
     int rank = 0;
-    int rankScore = 0;
+    int prevScore = 0;
     List<String> rankingData = new ArrayList<>();
     for (Map.Entry<String, Integer> sorted : playerLogData.entrySet()) {
-      if (rankScore == 0 || sorted.getValue() < rankScore) {
+      if (sorted.getValue() != prevScore) {
         rank += 1;
-        rankScore = sorted.getValue();
       }
       if (rank > 10) {
         break;
       }
       rankingData.add(rank + "," + sorted.getKey() + "," + sorted.getValue());
+      prevScore = sorted.getValue();
     }
     return rankingData;
   }

@@ -3,7 +3,6 @@ package ranking.v2;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
@@ -82,23 +80,23 @@ public class Ranking {
   private static List<String> getRankingData(Map<String, Integer> playerLogData,
       Map<String, String> gameEntryLogData) {
     int rank = 0;
-    int rankScore = 0;
+    int prevScore = 0;
     List<String> rankingData = new ArrayList<>();
     for (Map.Entry<String, Integer> playlog : playerLogData.entrySet()) {
-      if (rankScore == 0 || playlog.getValue() < rankScore) {
+      if (playlog.getValue() != prevScore) {
         rank += 1;
-        rankScore = playlog.getValue();
       }
       if (rank > 10) {
         break;
       }
       rankingData.add(rank + "," + playlog.getKey() + "," + gameEntryLogData.get(playlog.getKey())
           + "," + playlog.getValue());
+      prevScore = playlog.getValue();
     }
     return rankingData;
   }
 
-  private static void outputRankingData(List<String> rankingData) throws IOException { 
+  private static void outputRankingData(List<String> rankingData) throws IOException {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
     sb.append("rank,player_id,handle_name,score" + lineFeedCode);
