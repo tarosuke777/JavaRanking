@@ -23,9 +23,9 @@ public class Ranking {
       Path gameScoreLogPath = Paths.get(args[1]);
 
       Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
-      Map<String, Integer> playerLogData = getPlayLogData(gameScoreLogPath);
+      Map<String, Integer> playerLogData = getPlayerLogData(gameScoreLogPath);
 
-      playerLogData = sortPlayLogData(playerLogData);
+      playerLogData = sortPlayerLogData(playerLogData);
 
       List<String> rankingData = getRankingData(playerLogData, gameEntryLogData);
 
@@ -74,7 +74,7 @@ public class Ranking {
    * @param scoreLogFilePath
    * @return プレイヤーログデータ
    */
-  private static Map<String, Integer> getPlayLogData(Path gameScoreLogPath) throws IOException {
+  private static Map<String, Integer> getPlayerLogData(Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       return lines.skip(1) // header
           .map(line -> line.split(",")).collect(
@@ -83,12 +83,12 @@ public class Ranking {
   }
 
   /**
-   * ログデータのソート
+   * プレイヤーログデータのソート
    * 
    * @param playerLogData
-   * @return スコアの降順でソートした結果
+   * @return スコアの降順でソートしたプレイヤーログデータ
    */
-  private static Map<String, Integer> sortPlayLogData(Map<String, Integer> playerLogData) {
+  private static Map<String, Integer> sortPlayerLogData(Map<String, Integer> playerLogData) {
     return playerLogData.entrySet().stream()
         .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
             .thenComparing(Map.Entry.<String, Integer>comparingByKey()))
@@ -97,10 +97,10 @@ public class Ranking {
   }
 
   /**
-   * ランキングデータの取得
+   * ランキングデータを取得
    * 
    * @param playerLogData
-   * @return
+   * @return ランキングデータ
    */
   private static List<String> getRankingData(Map<String, Integer> playerLogData,
       Map<String, String> gameEntryLogData) {
@@ -121,6 +121,12 @@ public class Ranking {
     return rankingData;
   }
 
+  /**
+   * ランキングデータを出力
+   * 
+   * @param rankingData
+   * @throws IOException
+   */
   private static void outputRankingData(List<String> rankingData) throws IOException {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
