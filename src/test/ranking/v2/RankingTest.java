@@ -26,6 +26,21 @@ class RankingTest {
     assertEquals(exp, out.toString());
   }
 
+  @Test
+  void mainTest_正常系_空ファイル() throws IOException {
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(out));
+
+    String[] args = {"./src/test/ranking/v2/game_ently_log_none.csv",
+        "./src/test/ranking/v2/game_score_log_none.csv"};
+    Ranking.main(args);
+
+    Path path = Path.of("./src/test/ranking/v2/exp_none.csv");
+    String exp = Files.readString(path);
+    assertEquals(exp, out.toString());
+  }
+
   // @Test
   // void mainTest_異常系_引数のファイルが存在しない() throws IOException {
   // ByteArrayOutputStream out = new ByteArrayOutputStream();
