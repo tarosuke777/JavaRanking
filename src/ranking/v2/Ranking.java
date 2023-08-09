@@ -17,8 +17,10 @@ public class Ranking {
 
   public static void main(String[] args) throws IOException {
 
-    var gameEntryLogPath = Paths.get(args[0]);
-    var gameScoreLogPath = Paths.get(args[1]);
+    validateArgs(args);
+
+    Path gameEntryLogPath = Paths.get(args[0]);
+    Path gameScoreLogPath = Paths.get(args[1]);
 
     Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
     Map<String, Integer> playerLogData = getPlayLogData(gameScoreLogPath);
@@ -28,6 +30,23 @@ public class Ranking {
     List<String> rankingData = getRankingData(playerLogData, gameEntryLogData);
 
     outputRankingData(rankingData);
+  }
+
+  /**
+   * 実行時引数の妥当性をチェックする
+   * 
+   * @param args
+   */
+  private static void validateArgs(String[] args) {
+    if (args == null || args.length != 2) {
+      System.err.println("invalid args");
+      System.exit(1);
+    }
+
+    if (Files.notExists(Paths.get(args[0])) || Files.notExists(Paths.get(args[1]))) {
+      System.err.println("not exists args File");
+      System.exit(1);
+    }
   }
 
   /**

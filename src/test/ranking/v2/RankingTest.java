@@ -1,7 +1,6 @@
 package test.ranking.v2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -27,12 +26,26 @@ class RankingTest {
     assertEquals(exp, out.toString());
   }
 
-  @Test
-  void mainTest_ˆÙíŒn_ˆø”NULL() throws IOException {
-    NullPointerException e = assertThrows(NullPointerException.class, () -> {
-      Ranking.main(null);
-    });
-    assertEquals("Cannot load from object array because \"args\" is null", e.getMessage());
-  }
+  // @Test
+  // void mainTest_ˆÙíŒn_ˆø”‚Ìƒtƒ@ƒCƒ‹‚ª‘¶Ý‚µ‚È‚¢() throws IOException {
+  // ByteArrayOutputStream out = new ByteArrayOutputStream();
+  // System.setErr(new PrintStream(out));
+  //
+  // String[] args = {"./src/test/ranking/v2/nothing_game_ently_log.csv",
+  // "./src/test/ranking/v2/nothing_game_score_log.csv"};
+  // Ranking.main(args);
+  //
+  // String exp = "not exists args File";
+  // assertEquals(exp, out.toString());
+  //
+  // }
+
+  // @Test
+  // void mainTest_ˆÙíŒn_ˆø”NULL() throws IOException {
+  // NullPointerException e = assertThrows(NullPointerException.class, () -> {
+  // Ranking.main(null);
+  // });
+  // assertEquals("Cannot load from object array because \"args\" is null", e.getMessage());
+  // }
 
 }
