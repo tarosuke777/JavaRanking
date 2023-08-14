@@ -135,7 +135,7 @@ public class Ranking {
       }
 
       rankingData.add(outRank + "," + playerId + "," + handleName + "," + score);
-      prevScore = playlog.getValue();
+      prevScore = score;
     }
     return rankingData;
 
