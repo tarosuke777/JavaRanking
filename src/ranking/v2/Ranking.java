@@ -1,5 +1,8 @@
 package ranking.v2;
 
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.maxBy;
 import static java.util.stream.Collectors.toMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
@@ -80,8 +82,8 @@ public class Ranking {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
 
       Map<String, Optional<String[]>> scoreData = lines.skip(1) // header
-          .map(line -> line.split(",")).collect(Collectors.groupingBy(values -> values[1],
-              Collectors.maxBy(Comparator.comparingInt(values -> Integer.parseInt(values[2])))));
+          .map(line -> line.split(",")).collect(groupingBy(values -> values[1],
+              maxBy(Comparator.comparingInt(values -> Integer.parseInt(values[2])))));
 
       return scoreData.entrySet().stream()
           .collect(toMap(Map.Entry::getKey, e -> Integer.parseInt(e.getValue().get()[2])));
@@ -96,11 +98,20 @@ public class Ranking {
    * @return スコアの降順でソートしたプレイヤーログデータ
    */
   private static Map<String, Integer> sortPlayerLogData(Map<String, Integer> playerLogData) {
-    return playerLogData.entrySet().stream()
-        .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
-            .thenComparing(Map.Entry.<String, Integer>comparingByKey()))
+
+    Comparator<Map.Entry<String, Integer>> valueComparator =
+        Map.Entry.comparingByValue(Comparator.reverseOrder());
+    Comparator<Map.Entry<String, Integer>> keyComparator = Map.Entry.comparingByKey();
+
+    return playerLogData.entrySet().stream().sorted(valueComparator.thenComparing(keyComparator))
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
             LinkedHashMap::new));
+
+    // return playerLogData.entrySet().stream()
+    // .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
+    // .thenComparing(Map.Entry.<String, Integer>comparingByKey()))
+    // .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
+    // LinkedHashMap::new));
   }
 
   /**
