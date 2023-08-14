@@ -1,16 +1,17 @@
 package ranking.v2;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
@@ -73,12 +74,18 @@ public class Ranking {
    * 
    * @param scoreLogFilePath
    * @return プレイヤーログデータ
+   * @throws IOException
    */
   private static Map<String, Integer> getPlayerLogData(Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
-      return lines.skip(1) // header
-          .map(line -> line.split(",")).collect(
-              groupingBy(values -> values[1], summingInt(values -> Integer.parseInt(values[2]))));
+
+      Map<String, Optional<String[]>> scoreData = lines.skip(1) // header
+          .map(line -> line.split(",")).collect(Collectors.groupingBy(values -> values[1],
+              Collectors.maxBy(Comparator.comparingInt(values -> Integer.parseInt(values[2])))));
+
+      return scoreData.entrySet().stream()
+          .collect(toMap(Map.Entry::getKey, e -> Integer.parseInt(e.getValue().get()[2])));
+
     }
   }
 
@@ -104,21 +111,31 @@ public class Ranking {
    */
   private static List<String> getRankingData(Map<String, Integer> playerLogData,
       Map<String, String> gameEntryLogData) {
-    int rank = 0;
     int prevScore = 0;
+    int rank = 0;
+    int outRank = 0;
     List<String> rankingData = new ArrayList<>();
     for (Map.Entry<String, Integer> playlog : playerLogData.entrySet()) {
-      if (playlog.getValue() != prevScore) {
-        rank += 1;
+
+      if (!gameEntryLogData.containsKey(playlog.getKey())) {
+        continue;
       }
-      if (rank > 10) {
+
+      rank += 1;
+      if (playlog.getValue() != prevScore) {
+        outRank = rank;
+      }
+
+      if (outRank > 10) {
         break;
       }
-      rankingData.add(rank + "," + playlog.getKey() + "," + gameEntryLogData.get(playlog.getKey())
-          + "," + playlog.getValue());
+
+      rankingData.add(outRank + "," + playlog.getKey() + ","
+          + gameEntryLogData.get(playlog.getKey()) + "," + playlog.getValue());
       prevScore = playlog.getValue();
     }
     return rankingData;
+
   }
 
   /**
