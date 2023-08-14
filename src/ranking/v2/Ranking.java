@@ -117,7 +117,11 @@ public class Ranking {
     List<String> rankingData = new ArrayList<>();
     for (Map.Entry<String, Integer> playlog : playerLogData.entrySet()) {
 
-      if (!gameEntryLogData.containsKey(playlog.getKey())) {
+      var playerId = playlog.getKey();
+      var handleName = gameEntryLogData.get(playlog.getKey());
+      var score = playlog.getValue();
+
+      if (handleName == null) {
         continue;
       }
 
@@ -130,8 +134,7 @@ public class Ranking {
         break;
       }
 
-      rankingData.add(outRank + "," + playlog.getKey() + ","
-          + gameEntryLogData.get(playlog.getKey()) + "," + playlog.getValue());
+      rankingData.add(outRank + "," + playerId + "," + handleName + "," + score);
       prevScore = playlog.getValue();
     }
     return rankingData;
