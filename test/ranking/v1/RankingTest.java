@@ -17,10 +17,10 @@ class RankingTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     System.setOut(new PrintStream(out));
 
-    String[] args = {"testdata/score_log.csv"};
+    String[] args = {"testdata/ranking/v1/in/score_log.csv"};
     Ranking.main(args);
 
-    Path path = Path.of("testdata/v1_exp_success.csv");
+    Path path = Path.of("testdata/ranking/v1/out/success.csv");
     String exp = Files.readString(path);
     assertEquals(exp, out.toString());
   }

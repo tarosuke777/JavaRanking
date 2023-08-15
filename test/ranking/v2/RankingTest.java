@@ -22,8 +22,9 @@ class RankingTest {
   @Test
   void mainTest_³íŒn() throws IOException {
 
-    String[] input = {"testdata/game_ently_log.csv", "testdata/game_score_log.csv"};
-    String output = Files.readString(Path.of("testdata/v2_exp_success.csv"));
+    String[] input =
+        {"testdata/ranking/v2/in/game_ently_log.csv", "testdata/ranking/v2/in/game_score_log.csv"};
+    String output = Files.readString(Path.of("testdata/ranking/v2/out/success.csv"));
 
     Ranking.main(input);
 
@@ -33,34 +34,12 @@ class RankingTest {
   @Test
   void mainTest_³íŒn_‹óƒtƒ@ƒCƒ‹() throws IOException {
 
-    String[] input = {"testdata/game_ently_log_none.csv", "testdata/game_score_log_none.csv"};
-    String output = Files.readString(Path.of("testdata/v2_exp_none.csv"));
+    String[] input = {"testdata/ranking/v2/in/game_ently_log_none.csv",
+        "testdata/ranking/v2/in/game_score_log_none.csv"};
+    String output = Files.readString(Path.of("testdata/ranking/v2/out/none.csv"));
 
     Ranking.main(input);
 
     assertEquals(output, this.output.toString());
   }
-
-  // @Test
-  // void mainTest_ˆÙíŒn_ˆø”‚Ìƒtƒ@ƒCƒ‹‚ª‘¶Ý‚µ‚È‚¢() throws IOException {
-  // ByteArrayOutputStream out = new ByteArrayOutputStream();
-  // System.setErr(new PrintStream(out));
-  //
-  // String[] args = {"./src/test/ranking/v2/nothing_game_ently_log.csv",
-  // "./src/test/ranking/v2/nothing_game_score_log.csv"};
-  // Ranking.main(args);
-  //
-  // String exp = "not exists args File";
-  // assertEquals(exp, out.toString());
-  //
-  // }
-
-  // @Test
-  // void mainTest_ˆÙíŒn_ˆø”NULL() throws IOException {
-  // NullPointerException e = assertThrows(NullPointerException.class, () -> {
-  // Ranking.main(null);
-  // });
-  // assertEquals("Cannot load from object array because \"args\" is null", e.getMessage());
-  // }
-
 }
