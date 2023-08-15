@@ -1,8 +1,6 @@
 package ranking.v2;
 
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.maxBy;
 import static java.util.stream.Collectors.toMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,7 +11,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
@@ -28,9 +28,9 @@ public class Ranking {
       Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
       Map<String, String[]> playerLogData = getPlayerLogData(gameScoreLogPath);
 
-      playerLogData = sortPlayerLogData(playerLogData);
+      Map<String, String[]> playerLogSortedData = sortPlayerLogData(playerLogData);
 
-      List<String> rankingData = getRankingData(playerLogData, gameEntryLogData);
+      List<String> rankingData = getRankingData(playerLogSortedData, gameEntryLogData);
 
       outputRankingData(rankingData);
 
@@ -85,14 +85,10 @@ public class Ranking {
    */
   private static Map<String, String[]> getPlayerLogData(Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
-
-      Map<String, Optional<String[]>> scoreData = lines.skip(1) // header
-          .map(line -> line.split(",")).collect(groupingBy(values -> values[1],
-              maxBy(Comparator.comparingInt(values -> Integer.parseInt(values[2])))));
-
-      return scoreData.entrySet().stream()
-          .collect(toMap(Map.Entry::getKey, e -> e.getValue().orElseGet(null)));
-
+      return lines.skip(1) // header
+          .map(line -> line.split(","))
+          .collect(Collectors.toMap(values -> values[1], Function.identity(),
+              BinaryOperator.maxBy(Comparator.comparingInt(values -> Integer.valueOf(values[2])))));
     }
   }
 
