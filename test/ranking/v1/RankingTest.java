@@ -1,19 +1,13 @@
-package test.ranking.v1;
-
-import org.junit.jupiter.api.function.Executable;
+package ranking.v1;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import org.junit.jupiter.api.Test;
-
-import ranking.v1.Ranking;
 
 class RankingTest {
 
@@ -23,10 +17,10 @@ class RankingTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     System.setOut(new PrintStream(out));
 
-    String[] args = {"./src/test/ranking/v1/score_log.csv"};
+    String[] args = {"testdata/score_log.csv"};
     Ranking.main(args);
 
-    Path path = Path.of("./src/test/ranking/v1/expMainTest.csv");
+    Path path = Path.of("testdata/v1_exp_success.csv");
     String exp = Files.readString(path);
     assertEquals(exp, out.toString());
   }
