@@ -52,8 +52,13 @@ public class Ranking {
       System.exit(1);
     }
 
-    if (Files.notExists(Paths.get(args[0])) || Files.notExists(Paths.get(args[1]))) {
-      System.err.println("not exists args File");
+    if (Files.notExists(Paths.get(args[0]))) {
+      System.err.println("not exists args File " + "args[0]:" + args[0]);
+      System.exit(1);
+    }
+
+    if (Files.notExists(Paths.get(args[1]))) {
+      System.err.println("not exists args File " + "args[1]:" + args[1]);
       System.exit(1);
     }
   }
