@@ -19,9 +19,15 @@ import java.util.stream.Stream;
 public class Ranking {
 
   public static void main(String[] args) {
+
     try {
       validateArgs(args);
+    } catch (IllegalArgumentException e) {
+      System.err.println(e.getMessage());
+      System.exit(1);
+    }
 
+    try {
       Path gameEntryLogPath = Paths.get(args[0]);
       Path gameScoreLogPath = Paths.get(args[1]);
 
@@ -42,32 +48,30 @@ public class Ranking {
   }
 
   /**
-   * 実行時引数の妥当性をチェックする
+   * 実行時引数の妥当性をチェック
    * 
    * @param args
    */
   private static void validateArgs(String[] args) {
     if (args == null || args.length != 2) {
-      System.err.println("invalid args");
-      System.exit(1);
+      throw new IllegalArgumentException("invalid args");
     }
 
     if (Files.notExists(Paths.get(args[0]))) {
-      System.err.println("not exists args File " + "args[0]:" + args[0]);
-      System.exit(1);
+      throw new IllegalArgumentException("not exists args File " + "args[0]:" + args[0]);
     }
 
     if (Files.notExists(Paths.get(args[1]))) {
-      System.err.println("not exists args File " + "args[1]:" + args[1]);
-      System.exit(1);
+      throw new IllegalArgumentException("not exists args File " + "args[1]:" + args[1]);
     }
   }
 
   /**
-   * playerId毎にスコアを集計したプレイヤーログデータを取得
+   * エントリーログデータを取得
    * 
-   * @param scoreLogFilePath
-   * @return プレイヤーログデータ
+   * @param gameEntryLogPath
+   * @return エントリーログデータ
+   * @throws IOException
    */
   private static Map<String, String> gameEntryLogData(Path gameEntryLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameEntryLogPath)) {
@@ -77,27 +81,25 @@ public class Ranking {
   }
 
   /**
-   * playerId毎にスコアを集計したプレイヤーログデータを取得
+   * プレイヤーログデータを取得
    * 
-   * @param scoreLogFilePath
+   * @param gameScoreLogPath
    * @return プレイヤーログデータ
    * @throws IOException
    */
   private static Map<String, String[]> getPlayerLogData(Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
-      return lines.skip(1) // header
-          .map(line -> line.split(","))
+      return lines.skip(1).map(line -> line.split(","))
           .collect(Collectors.toMap(values -> values[1], Function.identity(),
               BinaryOperator.maxBy(Comparator.comparingInt(values -> Integer.valueOf(values[2])))));
     }
   }
 
   /**
-   * playerId毎にスコアを集計したプレイヤーログデータを取得
+   * プレイヤーログデータをソート
    * 
-   * @param scoreLogFilePath
+   * @param playerLogData
    * @return プレイヤーログデータ
-   * @throws IOException
    */
   private static Map<String, String[]> sortPlayerLogData(Map<String, String[]> playerLogData) {
 
@@ -153,9 +155,8 @@ public class Ranking {
    * ランキングデータを出力
    * 
    * @param rankingData
-   * @throws IOException
    */
-  private static void outputRankingData(List<String> rankingData) throws IOException {
+  private static void outputRankingData(List<String> rankingData) {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
     sb.append("rank,player_id,handle_name,score" + lineFeedCode);
