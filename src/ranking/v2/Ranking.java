@@ -26,7 +26,7 @@ public class Ranking {
       Path gameScoreLogPath = Paths.get(args[1]);
 
       Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
-      Map<String, Integer> playerLogData = getPlayerLogData(gameScoreLogPath);
+      Map<String, String[]> playerLogData = getPlayerLogData(gameScoreLogPath);
 
       playerLogData = sortPlayerLogData(playerLogData);
 
@@ -83,7 +83,7 @@ public class Ranking {
    * @return プレイヤーログデータ
    * @throws IOException
    */
-  private static Map<String, Integer> getPlayerLogData(Path gameScoreLogPath) throws IOException {
+  private static Map<String, String[]> getPlayerLogData(Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
 
       Map<String, Optional<String[]>> scoreData = lines.skip(1) // header
@@ -91,32 +91,28 @@ public class Ranking {
               maxBy(Comparator.comparingInt(values -> Integer.parseInt(values[2])))));
 
       return scoreData.entrySet().stream()
-          .collect(toMap(Map.Entry::getKey, e -> Integer.parseInt(e.getValue().get()[2])));
+          .collect(toMap(Map.Entry::getKey, e -> e.getValue().orElseGet(null)));
 
     }
   }
 
   /**
-   * プレイヤーログデータのソート
+   * playerId毎にスコアを集計したプレイヤーログデータを取得
    * 
-   * @param playerLogData
-   * @return スコアの降順でソートしたプレイヤーログデータ
+   * @param scoreLogFilePath
+   * @return プレイヤーログデータ
+   * @throws IOException
    */
-  private static Map<String, Integer> sortPlayerLogData(Map<String, Integer> playerLogData) {
+  private static Map<String, String[]> sortPlayerLogData(Map<String, String[]> playerLogData) {
 
-    Comparator<Map.Entry<String, Integer>> valueComparator =
-        Map.Entry.comparingByValue(Comparator.reverseOrder());
-    Comparator<Map.Entry<String, Integer>> keyComparator = Map.Entry.comparingByKey();
+    Comparator<Map.Entry<String, String[]>> valueComparator = Map.Entry.comparingByValue(
+        Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
+    Comparator<Map.Entry<String, String[]>> keyComparator = Map.Entry.comparingByKey();
 
     return playerLogData.entrySet().stream().sorted(valueComparator.thenComparing(keyComparator))
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
             LinkedHashMap::new));
 
-    // return playerLogData.entrySet().stream()
-    // .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
-    // .thenComparing(Map.Entry.<String, Integer>comparingByKey()))
-    // .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
-    // LinkedHashMap::new));
   }
 
   /**
@@ -125,24 +121,24 @@ public class Ranking {
    * @param playerLogData
    * @return ランキングデータ
    */
-  private static List<String> getRankingData(Map<String, Integer> playerLogData,
+  private static List<String> getRankingData(Map<String, String[]> playerLogData,
       Map<String, String> gameEntryLogData) {
     int prevScore = 0;
     int rank = 0;
     int outRank = 0;
     List<String> rankingData = new ArrayList<>();
-    for (Map.Entry<String, Integer> playlog : playerLogData.entrySet()) {
+    for (Map.Entry<String, String[]> playlog : playerLogData.entrySet()) {
 
       var playerId = playlog.getKey();
       var handleName = gameEntryLogData.get(playlog.getKey());
-      var score = playlog.getValue();
+      var score = Integer.valueOf(playlog.getValue()[2]);
 
       if (handleName == null) {
         continue;
       }
 
       rank += 1;
-      if (playlog.getValue() != prevScore) {
+      if (score != prevScore) {
         outRank = rank;
       }
 
