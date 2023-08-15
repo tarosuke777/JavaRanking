@@ -11,12 +11,12 @@ import org.junit.jupiter.api.Test;
 
 class RankingTest {
 
-  private ByteArrayOutputStream out;
+  private ByteArrayOutputStream output;
 
   @BeforeEach
   public void init() {
-    out = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(out));
+    output = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(output));
   }
 
   @Test
@@ -27,7 +27,7 @@ class RankingTest {
 
     Ranking.main(input);
 
-    assertEquals(output, out.toString());
+    assertEquals(output, this.output.toString());
   }
 
   @Test
@@ -38,7 +38,7 @@ class RankingTest {
 
     Ranking.main(input);
 
-    assertEquals(output, out.toString());
+    assertEquals(output, this.output.toString());
   }
 
   // @Test
