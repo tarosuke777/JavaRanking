@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class RankingTest {
+class RankingPracticeExamTest {
 
   private ByteArrayOutputStream out;
 
@@ -22,23 +22,23 @@ class RankingTest {
   @Test
   void mainTest_ê≥èÌån() throws IOException {
 
-    String[] input = {"testdata/game_ently_log.csv", "testdata/game_score_log.csv"};
-    String output = Files.readString(Path.of("testdata/v2_exp_success.csv"));
+    String[] args = {"testdata/game_ently_log.csv", "testdata/game_score_log.csv"};
+    Ranking.main(args);
 
-    Ranking.main(input);
-
-    assertEquals(output, out.toString());
+    Path path = Path.of("testdata/v2_exp_success.csv");
+    String exp = Files.readString(path);
+    assertEquals(exp, out.toString());
   }
 
   @Test
   void mainTest_ê≥èÌån_ãÛÉtÉ@ÉCÉã() throws IOException {
 
-    String[] input = {"testdata/game_ently_log_none.csv", "testdata/game_score_log_none.csv"};
-    String output = Files.readString(Path.of("testdata/v2_exp_none.csv"));
+    String[] args = {"testdata/game_ently_log_none.csv", "testdata/game_score_log_none.csv"};
+    Ranking.main(args);
 
-    Ranking.main(input);
-
-    assertEquals(output, out.toString());
+    Path path = Path.of("testdata/v2_exp_none.csv");
+    String exp = Files.readString(path);
+    assertEquals(exp, out.toString());
   }
 
   // @Test
