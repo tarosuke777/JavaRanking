@@ -31,12 +31,12 @@ public class Ranking {
       Path gameEntryLogPath = Paths.get(args[0]);
       Path gameScoreLogPath = Paths.get(args[1]);
 
-      Map<String, String> gameEntryLogData = gameEntryLogData(gameEntryLogPath);
-      Map<String, String[]> playerLogData = getPlayerLogData(gameScoreLogPath);
+      Map<String, String> entryLog = gameEntryLog(gameEntryLogPath);
+      Map<String, String[]> scoreLogPerUser = getScoreLogPerUser(gameScoreLogPath);
 
-      Map<String, String[]> playerLogSortedData = sortPlayerLogData(playerLogData);
+      Map<String, String[]> scoreLogPerUserSorted = sortScoreLog(scoreLogPerUser);
 
-      List<String> rankingData = getRankingData(playerLogSortedData, gameEntryLogData);
+      List<String> rankingData = getRankingData(scoreLogPerUserSorted, entryLog);
 
       outputRankingData(rankingData);
 
@@ -67,13 +67,13 @@ public class Ranking {
   }
 
   /**
-   * エントリーログデータを取得
+   * エントリーログを取得
    * 
    * @param gameEntryLogPath
-   * @return エントリーログデータ
+   * @return エントリーログ
    * @throws IOException
    */
-  private static Map<String, String> gameEntryLogData(Path gameEntryLogPath) throws IOException {
+  private static Map<String, String> gameEntryLog(Path gameEntryLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameEntryLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
           .collect(toMap(values -> values[0], values -> values[1]));
@@ -81,13 +81,14 @@ public class Ranking {
   }
 
   /**
-   * プレイヤーログデータを取得
+   * スコアログをユーザ単位に取得
    * 
    * @param gameScoreLogPath
-   * @return プレイヤーログデータ
+   * @return スコアログ
    * @throws IOException
    */
-  private static Map<String, String[]> getPlayerLogData(Path gameScoreLogPath) throws IOException {
+  private static Map<String, String[]> getScoreLogPerUser(Path gameScoreLogPath)
+      throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
           .collect(Collectors.toMap(values -> values[1], Function.identity(),
@@ -96,18 +97,18 @@ public class Ranking {
   }
 
   /**
-   * プレイヤーログデータをソート
+   * ユーザ単位のスコアログをソート
    * 
-   * @param playerLogData
+   * @param scoreLogPerUser
    * @return プレイヤーログデータ
    */
-  private static Map<String, String[]> sortPlayerLogData(Map<String, String[]> playerLogData) {
+  private static Map<String, String[]> sortScoreLog(Map<String, String[]> scoreLogPerUser) {
 
     Comparator<Map.Entry<String, String[]>> valueComparator = Map.Entry.comparingByValue(
         Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
     Comparator<Map.Entry<String, String[]>> keyComparator = Map.Entry.comparingByKey();
 
-    return playerLogData.entrySet().stream().sorted(valueComparator.thenComparing(keyComparator))
+    return scoreLogPerUser.entrySet().stream().sorted(valueComparator.thenComparing(keyComparator))
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
             LinkedHashMap::new));
 
@@ -116,20 +117,20 @@ public class Ranking {
   /**
    * ランキングデータを取得
    * 
-   * @param playerLogData
+   * @param scoreLogPerUserSorted
    * @return ランキングデータ
    */
-  private static List<String> getRankingData(Map<String, String[]> playerLogData,
-      Map<String, String> gameEntryLogData) {
+  private static List<String> getRankingData(Map<String, String[]> scoreLogPerUserSorted,
+      Map<String, String> gameEntryLog) {
     int prevScore = 0;
     int rank = 0;
     int outRank = 0;
     List<String> rankingData = new ArrayList<>();
-    for (Map.Entry<String, String[]> playlog : playerLogData.entrySet()) {
+    for (Map.Entry<String, String[]> scoreLog : scoreLogPerUserSorted.entrySet()) {
 
-      var playerId = playlog.getKey();
-      var handleName = gameEntryLogData.get(playlog.getKey());
-      var score = Integer.valueOf(playlog.getValue()[2]);
+      String playerId = scoreLog.getKey();
+      String handleName = gameEntryLog.get(playerId);
+      Integer score = Integer.valueOf(scoreLog.getValue()[2]);
 
       if (handleName == null) {
         continue;
