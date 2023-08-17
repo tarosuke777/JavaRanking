@@ -64,9 +64,10 @@ public class Ranking {
 
       switch (outputKbn) {
         case userRanking:
-          Map<String, String[]> scoreLogPerUser = getScoreLogPerUser(gameScoreLogPath);
-          Map<String, String[]> scoreLogPerUserSorted = sortScoreLogPerUser(scoreLogPerUser);
-          List<String> rankingData = getRankingData(scoreLogPerUserSorted, entryLog);
+          Map<String, String[]> maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
+          Map<String, String[]> scoreLogPerUserRankingSorted =
+              sortRankingScoreLogPerUser(maxScoreLogPerUser);
+          List<String> rankingData = getRankingData(scoreLogPerUserRankingSorted, entryLog);
           outputRankingData(rankingData);
           break;
         case dateSummary:
@@ -121,13 +122,13 @@ public class Ranking {
   }
 
   /**
-   * スコアログをユーザ単位に取得
+   * 最高スコアログをユーザ単位に取得
    * 
    * @param gameScoreLogPath
-   * @return スコアログ
+   * @return 最高スコアログ
    * @throws IOException
    */
-  private static Map<String, String[]> getScoreLogPerUser(Path gameScoreLogPath)
+  private static Map<String, String[]> getMaxScoreLogPerUser(Path gameScoreLogPath)
       throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
@@ -156,12 +157,13 @@ public class Ranking {
   }
 
   /**
-   * ユーザ単位のスコアログをソート
+   * ユーザ単位のスコアログをランキング用にソート
    * 
    * @param scoreLogPerUser
-   * @return プレイヤーログデータ
+   * @return ユーザ単位のスコアログ
    */
-  private static Map<String, String[]> sortScoreLogPerUser(Map<String, String[]> scoreLogPerUser) {
+  private static Map<String, String[]> sortRankingScoreLogPerUser(
+      Map<String, String[]> scoreLogPerUser) {
 
     Comparator<Map.Entry<String, String[]>> valueComparator = Map.Entry.comparingByValue(
         Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
@@ -177,7 +179,7 @@ public class Ranking {
    * 日付単位のスコアログをソート
    * 
    * @param scoreLogPerUser
-   * @return プレイヤーログデータ
+   * @return 日付単位のスコアログ
    */
   private static Map<String, List<String[]>> sortScoreLogPerDate(
       Map<String, List<String[]>> scoreLogPerDate) {
