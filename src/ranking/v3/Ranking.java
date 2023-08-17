@@ -59,8 +59,7 @@ public class Ranking {
 
       Map<String, String> entryLog = gameEntryLog(gameEntryLogPath);
 
-      OutputKbn outputKbn =
-          args.length > 2 && args[2] != null ? OutputKbn.from(args[2]) : OutputKbn.userRanking;
+      OutputKbn outputKbn = args.length > 2 ? OutputKbn.from(args[2]) : OutputKbn.userRanking;
 
       switch (outputKbn) {
         case userRanking:
@@ -104,6 +103,10 @@ public class Ranking {
 
     if (Files.notExists(Paths.get(args[1]))) {
       throw new IllegalArgumentException("not exists args File " + "args[1]:" + args[1]);
+    }
+
+    if (args.length > 2 && OutputKbn.from(args[2]) == null) {
+      throw new IllegalArgumentException("not exists args outputKbn " + "args[2]:" + args[2]);
     }
   }
 
