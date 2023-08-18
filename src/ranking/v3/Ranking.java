@@ -79,7 +79,6 @@ public class Ranking {
           scoreLogPerDate = sortScoreLogPerDate(scoreLogPerDate);
           List<String> sumData = getSumDateData(scoreLogPerDate, entryLog);
           outputSumDateData(sumData);
-
           break;
       }
 
