@@ -64,23 +64,20 @@ public class Ranking {
       switch (outputKbn) {
         case userRanking:
           Map<String, String[]> maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
-          Map<String, String[]> scoreLogPerUserRankingSorted =
-              sortRankingScoreLogPerUser(maxScoreLogPerUser);
-          List<String> rankingData = getRankingData(scoreLogPerUserRankingSorted, entryLog);
+          maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
+          List<String> rankingData = getRankingData(maxScoreLogPerUser, entryLog);
           outputRankingData(rankingData);
           break;
         case dateSummary:
           Map<String, List<String[]>> scoreLogPerDate = getScoreLogPerDate(gameScoreLogPath);
-          Map<String, List<String[]>> scoreLogPerDateSorted = sortScoreLogPerDate(scoreLogPerDate);
-          List<String> sumData = getSumDateData(scoreLogPerDateSorted, entryLog);
+          scoreLogPerDate = sortScoreLogPerDate(scoreLogPerDate);
+          List<String> sumData = getSumDateData(scoreLogPerDate, entryLog);
           outputSumDateData(sumData);
 
           break;
       }
 
-    } catch (
-
-    Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
     }
