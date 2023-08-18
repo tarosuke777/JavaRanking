@@ -54,4 +54,25 @@ class RankingTest {
 
     assertEquals(output, this.output.toString());
   }
+
+  @Test
+  void mainTest_正常系_日集計_年月指定() throws IOException {
+
+    String[] input = {"testdata/ranking/v3/in/game_ently_log.csv",
+        "testdata/ranking/v3/in/game_score_log.csv", "2", "202101"};
+    String output = Files.readString(Path.of("testdata/ranking/v3/out/success_sum_202101.csv"));
+
+    Ranking.main(input);
+
+    assertEquals(output, this.output.toString());
+  }
+
+  // @Test
+  void mainTest_異常系_日集計_不正年月指定() throws IOException {
+
+    String[] input = {"testdata/ranking/v3/in/game_ently_log.csv",
+        "testdata/ranking/v3/in/game_score_log.csv", "2", "202100"};
+
+    Ranking.main(input);
+  }
 }

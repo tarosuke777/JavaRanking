@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
@@ -22,6 +23,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ranking {
+
+  private static DateTimeFormatter uuuuMM =
+      DateTimeFormatter.ofPattern("uuuuMM").withResolverStyle(ResolverStyle.STRICT);
 
   private enum OutputKbn {
     userRanking("1"), dateSummary("2");
@@ -69,7 +73,9 @@ public class Ranking {
           outputRankingData(rankingData);
           break;
         case dateSummary:
-          Map<String, List<String[]>> scoreLogPerDate = getScoreLogPerDate(gameScoreLogPath);
+          YearMonth targetYearMonth = args.length > 3 ? YearMonth.parse(args[3], uuuuMM) : null;
+          Map<String, List<String[]>> scoreLogPerDate =
+              getScoreLogPerDate(gameScoreLogPath, targetYearMonth);
           scoreLogPerDate = sortScoreLogPerDate(scoreLogPerDate);
           List<String> sumData = getSumDateData(scoreLogPerDate, entryLog);
           outputSumDateData(sumData);
@@ -104,6 +110,14 @@ public class Ranking {
 
     if (args.length > 2 && OutputKbn.from(args[2]) == null) {
       throw new IllegalArgumentException("not exists args outputKbn " + "args[2]:" + args[2]);
+    }
+
+    if (args.length > 3) {
+      try {
+        YearMonth.parse(args[3], uuuuMM);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("not exists args outputKbn " + "args[3]:" + args[3], e);
+      }
     }
   }
 
@@ -144,10 +158,18 @@ public class Ranking {
    * @return スコアログ
    * @throws IOException
    */
-  private static Map<String, List<String[]>> getScoreLogPerDate(Path gameScoreLogPath)
-      throws IOException {
+  private static Map<String, List<String[]>> getScoreLogPerDate(Path gameScoreLogPath,
+      YearMonth targetYearMonth) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
-      return lines.skip(1).map(line -> line.split(","))
+      return lines
+          .skip(
+              1)
+          .map(
+              line -> line.split(","))
+          .filter(values -> targetYearMonth != null ? YearMonth.parse(values[0],
+              DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm")
+                  .withResolverStyle(ResolverStyle.STRICT))
+              .equals(targetYearMonth) : true)
           .collect(Collectors.groupingBy(values -> LocalDate
               .parse(values[0],
                   DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm")
