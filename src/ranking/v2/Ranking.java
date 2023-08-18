@@ -32,11 +32,11 @@ public class Ranking {
       Path gameScoreLogPath = Paths.get(args[1]);
 
       Map<String, String> entryLog = gameEntryLog(gameEntryLogPath);
-      Map<String, String[]> scoreLogPerUser = getScoreLogPerUser(gameScoreLogPath);
+      Map<String, String[]> maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
 
-      Map<String, String[]> scoreLogPerUserSorted = sortScoreLog(scoreLogPerUser);
+      maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
 
-      List<String> rankingData = getRankingData(scoreLogPerUserSorted, entryLog);
+      List<String> rankingData = getRankingData(maxScoreLogPerUser, entryLog);
 
       outputRankingData(rankingData);
 
@@ -81,13 +81,13 @@ public class Ranking {
   }
 
   /**
-   * スコアログをユーザ単位に取得
+   * 最高スコアログをユーザ単位に取得
    * 
    * @param gameScoreLogPath
-   * @return スコアログ
+   * @return 最高スコアログ
    * @throws IOException
    */
-  private static Map<String, String[]> getScoreLogPerUser(Path gameScoreLogPath)
+  private static Map<String, String[]> getMaxScoreLogPerUser(Path gameScoreLogPath)
       throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
@@ -97,12 +97,13 @@ public class Ranking {
   }
 
   /**
-   * ユーザ単位のスコアログをソート
+   * ユーザ単位のスコアログをランキング用にソート
    * 
    * @param scoreLogPerUser
-   * @return プレイヤーログデータ
+   * @return ユーザ単位のスコアログ
    */
-  private static Map<String, String[]> sortScoreLog(Map<String, String[]> scoreLogPerUser) {
+  private static Map<String, String[]> sortRankingScoreLogPerUser(
+      Map<String, String[]> scoreLogPerUser) {
 
     Comparator<Map.Entry<String, String[]>> valueComparator = Map.Entry.comparingByValue(
         Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
