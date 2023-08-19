@@ -13,6 +13,7 @@ import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IntSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,8 +70,9 @@ public class Ranking {
         case userRanking:
           Map<String, String[]> maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
           maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
-          List<String> rankingData = getRankingData(maxScoreLogPerUser, entryLog);
-          outputRankingData(rankingData);
+          Map<String, List<String>> rankingDataPerGame =
+              getRankingData(maxScoreLogPerUser, entryLog);
+          outputRankingData(rankingDataPerGame);
           break;
         case dateSummary:
           YearMonth targetYearMonth = args.length > 3 ? YearMonth.parse(args[3], uuuuMM) : null;
@@ -186,11 +188,14 @@ public class Ranking {
   private static Map<String, String[]> sortRankingScoreLogPerUser(
       Map<String, String[]> scoreLogPerUser) {
 
-    Comparator<Map.Entry<String, String[]>> valueComparator = Map.Entry.comparingByValue(
+    Comparator<Map.Entry<String, String[]>> scoreComparator = Map.Entry.comparingByValue(
         Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
-    Comparator<Map.Entry<String, String[]>> keyComparator = Map.Entry.comparingByKey();
+    Comparator<Map.Entry<String, String[]>> gameKbnComparator =
+        Map.Entry.comparingByValue(Comparator.comparing(values -> Integer.valueOf(values[3])));
+    Comparator<Map.Entry<String, String[]>> playerIdComparator = Map.Entry.comparingByKey();
 
-    return scoreLogPerUser.entrySet().stream().sorted(valueComparator.thenComparing(keyComparator))
+    return scoreLogPerUser.entrySet().stream()
+        .sorted(gameKbnComparator.thenComparing(scoreComparator).thenComparing(playerIdComparator))
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
             LinkedHashMap::new));
 
@@ -216,20 +221,28 @@ public class Ranking {
    * @param scoreLogPerUserSorted
    * @return ランキングデータ
    */
-  private static List<String> getRankingData(Map<String, String[]> scoreLogPerUserSorted,
-      Map<String, String> gameEntryLog) {
+  private static Map<String, List<String>> getRankingData(
+      Map<String, String[]> scoreLogPerUserSorted, Map<String, String> gameEntryLog) {
     int prevScore = 0;
     int rank = 0;
     int outRank = 0;
+    Map<String, List<String>> rankingDataPerGame = new HashMap<>();
     List<String> rankingData = new ArrayList<>();
     for (Map.Entry<String, String[]> scoreLog : scoreLogPerUserSorted.entrySet()) {
 
+      String gameKbn = scoreLog.getValue()[3];
       String playerId = scoreLog.getKey();
       String handleName = gameEntryLog.get(playerId);
       Integer score = Integer.valueOf(scoreLog.getValue()[2]);
 
       if (handleName == null) {
         continue;
+      }
+
+      if (!rankingDataPerGame.containsKey(gameKbn)) {
+        rankingData = new ArrayList<>();
+        rankingDataPerGame.put(gameKbn, rankingData);
+        rank = 0;
       }
 
       rank += 1;
@@ -244,7 +257,7 @@ public class Ranking {
       rankingData.add(outRank + "," + playerId + "," + handleName + "," + score);
       prevScore = score;
     }
-    return rankingData;
+    return rankingDataPerGame;
 
   }
 
@@ -289,11 +302,19 @@ public class Ranking {
    * 
    * @param rankingData
    */
-  private static void outputRankingData(List<String> rankingData) {
+  private static void outputRankingData(Map<String, List<String>> rankingDataPerGame) {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
-    sb.append("rank,player_id,handle_name,score" + lineFeedCode);
-    rankingData.forEach(line -> sb.append(line + lineFeedCode));
+
+    if (rankingDataPerGame.isEmpty()) {
+      sb.append("no data" + lineFeedCode);
+    }
+
+    rankingDataPerGame.entrySet().stream().forEach(map -> {
+      sb.append("game:" + map.getKey() + lineFeedCode);
+      sb.append("rank,player_id,handle_name,score" + lineFeedCode);
+      map.getValue().forEach(line -> sb.append(line + lineFeedCode));
+    });
     System.out.print(sb.toString());
   }
 
