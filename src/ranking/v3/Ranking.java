@@ -29,7 +29,7 @@ public class Ranking {
       DateTimeFormatter.ofPattern("uuuuMM").withResolverStyle(ResolverStyle.STRICT);
 
   private enum OutputKbn {
-    userRanking("1"), dateSummary("2");
+    userRanking("1"), dateSummary("2"), userAvgRanking("3");
 
     private String value;
 
@@ -81,6 +81,12 @@ public class Ranking {
           scoreLogPerDate = sortScoreLogPerDate(scoreLogPerDate);
           List<String> sumData = getSumDateData(scoreLogPerDate, entryLog);
           outputSumDateData(sumData);
+          break;
+        case userAvgRanking:
+          maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
+          maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
+          rankingDataPerGame = getAvgRankingData(maxScoreLogPerUser, entryLog);
+          outputRankingData(rankingDataPerGame);
           break;
       }
 
@@ -260,6 +266,65 @@ public class Ranking {
     return rankingDataPerGame;
 
   }
+
+  /**
+   * 平均ランキングデータを取得
+   * 
+   * @param scoreLogPerUserSorted
+   * @return 平均ランキングデータ
+   */
+  private static Map<String, List<String>> getAvgRankingData(
+      Map<String, String[]> scoreLogPerUserSorted, Map<String, String> gameEntryLog) {
+
+    double avgScore = 0.0;
+    int prevScore = 0;
+    int rank = 0;
+    int outRank = 0;
+    Map<String, List<String>> rankingDataPerGame = new HashMap<>();
+    List<String> rankingData = new ArrayList<>();
+
+    for (Map.Entry<String, String[]> scoreLog : scoreLogPerUserSorted.entrySet()) {
+
+      String gameKbn = scoreLog.getValue()[3];
+      String playerId = scoreLog.getKey();
+      String handleName = gameEntryLog.get(playerId);
+      Integer score = Integer.valueOf(scoreLog.getValue()[2]);
+
+      if (handleName == null) {
+        continue;
+      }
+
+      if (!rankingDataPerGame.containsKey(gameKbn)) {
+        rankingData = new ArrayList<>();
+        rankingDataPerGame.put(gameKbn, rankingData);
+        rank = 0;
+        avgScore = scoreLogPerUserSorted.entrySet().stream()
+            .filter(mapEntry -> gameKbn.equals(mapEntry.getValue()[3]))
+            .collect(Collectors.averagingInt(mapEntry -> Integer.valueOf(mapEntry.getValue()[2])));
+      }
+
+      if (score < avgScore) {
+        continue;
+      }
+
+      rank += 1;
+      if (score != prevScore) {
+        outRank = rank;
+      }
+
+      if (outRank > 10) {
+        break;
+      }
+
+
+
+      rankingData.add(outRank + "," + playerId + "," + handleName + "," + score);
+      prevScore = score;
+    }
+    return rankingDataPerGame;
+
+  }
+
 
   /**
    * 日付集計データを取得

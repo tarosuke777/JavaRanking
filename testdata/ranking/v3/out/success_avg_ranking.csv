@@ -1,0 +1,8 @@
+game:1
+rank,player_id,handle_name,score
+1,player0002,HANDLE_NAME_2,20000
+2,player0001,HANDLE_NAME_1,12345
+game:2
+rank,player_id,handle_name,score
+1,player0005,HANDLE_NAME_5,300
+1,player0007,HANDLE_NAME_7,300
