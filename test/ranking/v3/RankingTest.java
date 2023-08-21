@@ -87,4 +87,17 @@ class RankingTest {
 
     assertEquals(output, this.output.toString());
   }
+
+  @Test
+  void mainTest_³íŒn_ƒQ[ƒ€í•Ê–ˆ‚Ìƒ‰ƒ“ƒLƒ“ƒO() throws IOException {
+
+    String[] input = {"testdata/ranking/v3/in/game_ently_log.csv",
+        "testdata/ranking/v3/in/game_score_log_small.csv", "4"};
+    String output =
+        Files.readString(Path.of("testdata/ranking/v3/out/success_user_game_per_ranking.csv"));
+
+    Ranking.main(input);
+
+    assertEquals(output, this.output.toString());
+  }
 }
