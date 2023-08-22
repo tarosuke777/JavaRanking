@@ -29,7 +29,7 @@ public class Ranking {
       DateTimeFormatter.ofPattern("uuuuMM").withResolverStyle(ResolverStyle.STRICT);
 
   private enum OutputKbn {
-    userRanking("1"), dateSummary("2"), userAvgRanking("3");
+    userRanking("1"), dateSummary("2"), userAvgRanking("3"), userGamePerRanking("4");
 
     private String value;
 
@@ -87,6 +87,13 @@ public class Ranking {
           maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
           rankingDataPerGame = getAvgRankingData(maxScoreLogPerUser, entryLog);
           outputRankingData(rankingDataPerGame);
+          break;
+        case userGamePerRanking:
+          maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
+          maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
+          Map<String, String> userGamePerRankingData =
+              getUserGamePerRankingData(maxScoreLogPerUser, entryLog);
+          outputRankingDataPerUserGame(userGamePerRankingData);
           break;
       }
 
@@ -325,6 +332,56 @@ public class Ranking {
 
   }
 
+  /**
+   * ユーザかつゲーム毎のランキングデータを取得
+   * 
+   * @param scoreLogPerUserSorted
+   * @return 平均ランキングデータ
+   */
+  private static Map<String, String> getUserGamePerRankingData(
+      Map<String, String[]> scoreLogPerUserSorted, Map<String, String> gameEntryLog) {
+
+    double avgScore = 0.0;
+    int prevScore = 0;
+    int rank = 0;
+    int outRank = 0;
+    List<String> rankingData = new ArrayList<>();
+
+    Map<String, String> rankingDataPerUser = new HashMap<>();
+    for (Map.Entry<String, String[]> scoreLog : scoreLogPerUserSorted.entrySet()) {
+
+      String playerId = scoreLog.getKey();
+      String handleName = gameEntryLog.get(playerId);
+      Integer score = Integer.valueOf(scoreLog.getValue()[2]);
+
+      if (handleName == null) {
+        continue;
+      }
+
+      rank += 1;
+      if (score != prevScore) {
+        outRank = rank;
+      }
+
+      if (outRank > 10) {
+        break;
+      }
+
+      String output = "";
+      if (rankingDataPerUser.containsKey(playerId)) {
+        output = rankingDataPerUser.get(playerId);
+      } else {
+        output = playerId + "," + handleName;
+      }
+
+      output = output + "," + outRank;
+      rankingDataPerUser.put(playerId, output);
+      prevScore = score;
+    }
+    return rankingDataPerUser;
+
+  }
+
 
   /**
    * 日付集計データを取得
@@ -379,6 +436,26 @@ public class Ranking {
       sb.append("game:" + map.getKey() + lineFeedCode);
       sb.append("rank,player_id,handle_name,score" + lineFeedCode);
       map.getValue().forEach(line -> sb.append(line + lineFeedCode));
+    });
+    System.out.print(sb.toString());
+  }
+
+  /**
+   * ランキングデータを出力
+   * 
+   * @param rankingData
+   */
+  private static void outputRankingDataPerUserGame(Map<String, String> rankingDataPerGame) {
+    String lineFeedCode = "\n";
+    StringBuilder sb = new StringBuilder();
+
+    if (rankingDataPerGame.isEmpty()) {
+      sb.append("no data" + lineFeedCode);
+    } else {
+      sb.append("player_id,handle_name,game_kbn_1,game_kbn_2" + lineFeedCode);
+    }
+    rankingDataPerGame.entrySet().stream().forEach(map -> {
+      sb.append(map.getValue() + lineFeedCode);
     });
     System.out.print(sb.toString());
   }
