@@ -18,6 +18,7 @@ import java.util.IntSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -89,10 +90,11 @@ public class Ranking {
           outputRankingData(rankingDataPerGame);
           break;
         case userGamePerRanking:
-          maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
-          maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
+          Map<String, Map<String, Optional<String[]>>> maxScoreLogPerGamePerUser =
+              getMaxScoreLogPerGamePerUser(gameScoreLogPath);
+          maxScoreLogPerGamePerUser = sortRankingScoreLogPerGamePerUser(maxScoreLogPerGamePerUser);
           Map<String, String> userGamePerRankingData =
-              getUserGamePerRankingData(maxScoreLogPerUser, entryLog);
+              getUserGamePerRankingData(maxScoreLogPerGamePerUser, entryLog);
           outputRankingDataPerUserGame(userGamePerRankingData);
           break;
       }
@@ -145,7 +147,8 @@ public class Ranking {
   private static Map<String, String> gameEntryLog(Path gameEntryLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameEntryLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
-          .collect(toMap(values -> values[0], values -> values[1]));
+          .sorted(Comparator.comparing(values -> values[0])).collect(toMap(values -> values[0],
+              values -> values[1], (oldVal, newVal) -> oldVal, LinkedHashMap::new));
     }
   }
 
@@ -162,6 +165,23 @@ public class Ranking {
       return lines.skip(1).map(line -> line.split(","))
           .collect(Collectors.toMap(values -> values[1], Function.identity(),
               BinaryOperator.maxBy(Comparator.comparingInt(values -> Integer.valueOf(values[2])))));
+    }
+  }
+
+  /**
+   * 最高スコアログをゲームかつユーザ単位に取得
+   * 
+   * @param gameScoreLogPath
+   * @return 最高スコアログ
+   * @throws IOException
+   */
+  private static Map<String, Map<String, Optional<String[]>>> getMaxScoreLogPerGamePerUser(
+      Path gameScoreLogPath) throws IOException {
+    try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
+      return lines.skip(1).map(line -> line.split(","))
+          .collect(Collectors.groupingBy(values -> values[3], Collectors.groupingBy(
+              values -> values[1],
+              Collectors.maxBy(Comparator.comparingInt(values -> Integer.valueOf(values[2]))))));
     }
   }
 
@@ -212,6 +232,30 @@ public class Ranking {
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
             LinkedHashMap::new));
 
+  }
+
+  /**
+   * ユーザ単位のスコアログをランキング用にソート
+   * 
+   * @param scoreLogPerUser
+   * @return ユーザ単位のスコアログ
+   */
+  private static Map<String, Map<String, Optional<String[]>>> sortRankingScoreLogPerGamePerUser(
+      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUser) {
+
+    Comparator<Map.Entry<String, Optional<String[]>>> scoreComparator =
+        Map.Entry.comparingByValue(Comparator.comparing(values -> Integer.valueOf(values.get()[2]),
+            Comparator.reverseOrder()));
+    Comparator<Map.Entry<String, Optional<String[]>>> playerIdComparator =
+        Map.Entry.comparingByKey();
+
+    scoreLogPerGamePerUser.entrySet().stream().forEach(map -> {
+      map.getValue().entrySet().stream().sorted(scoreComparator.thenComparing(playerIdComparator))
+          .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldVal, newVal) -> oldVal,
+              LinkedHashMap::new));
+    });
+
+    return scoreLogPerGamePerUser;
   }
 
   /**
@@ -339,20 +383,53 @@ public class Ranking {
    * @return 平均ランキングデータ
    */
   private static Map<String, String> getUserGamePerRankingData(
-      Map<String, String[]> scoreLogPerUserSorted, Map<String, String> gameEntryLog) {
+      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
+      Map<String, String> gameEntryLog) {
 
-    double avgScore = 0.0;
+    Map<String, String> rankingDataPerUser = new LinkedHashMap<>();
+    Map<String, String> rankingDataPerUser1 =
+        getUserRanking(gameEntryLog, scoreLogPerGamePerUserSorted.get("1"));
+
+    Map<String, String> rankingDataPerUser2 =
+        getUserRanking(gameEntryLog, scoreLogPerGamePerUserSorted.get("2"));
+
+    String out = "";
+    String playerId = "";
+    String handleName = "";
+    String ranking1 = "";
+    String ranking2 = "";
+
+    for (Map.Entry<String, String> gameEntry : gameEntryLog.entrySet()) {
+
+      playerId = gameEntry.getKey();
+      handleName = gameEntry.getValue();
+
+      ranking1 = rankingDataPerUser1.containsKey(playerId) ? rankingDataPerUser1.get(playerId) : "";
+      ranking2 = rankingDataPerUser2.containsKey(playerId) ? rankingDataPerUser2.get(playerId) : "";
+
+      out = playerId + "," + handleName + "," + ranking1 + "," + ranking2;
+
+      rankingDataPerUser.put(playerId, out);
+
+    }
+    return rankingDataPerUser;
+
+  }
+
+  private static Map<String, String> getUserRanking(Map<String, String> gameEntryLog,
+      Map<String, Optional<String[]>> scoreLogPerUser) {
+
+    Map<String, String> rankingDataPerUser = new HashMap<>();
+
     int prevScore = 0;
     int rank = 0;
     int outRank = 0;
-    List<String> rankingData = new ArrayList<>();
 
-    Map<String, String> rankingDataPerUser = new HashMap<>();
-    for (Map.Entry<String, String[]> scoreLog : scoreLogPerUserSorted.entrySet()) {
+    for (Map.Entry<String, Optional<String[]>> scoreLogPerUserSet : scoreLogPerUser.entrySet()) {
 
-      String playerId = scoreLog.getKey();
+      String playerId = scoreLogPerUserSet.getKey();
       String handleName = gameEntryLog.get(playerId);
-      Integer score = Integer.valueOf(scoreLog.getValue()[2]);
+      Integer score = Integer.valueOf(scoreLogPerUserSet.getValue().get()[2]);
 
       if (handleName == null) {
         continue;
@@ -367,19 +444,11 @@ public class Ranking {
         break;
       }
 
-      String output = "";
-      if (rankingDataPerUser.containsKey(playerId)) {
-        output = rankingDataPerUser.get(playerId);
-      } else {
-        output = playerId + "," + handleName;
-      }
-
-      output = output + "," + outRank;
-      rankingDataPerUser.put(playerId, output);
+      rankingDataPerUser.put(playerId, String.valueOf(outRank));
       prevScore = score;
     }
-    return rankingDataPerUser;
 
+    return rankingDataPerUser;
   }
 
 
