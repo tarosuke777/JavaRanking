@@ -60,12 +60,12 @@ public class Ranking {
 
     try {
 
-      Path gameEntryLogPath = Paths.get(args[0]);
-      Path gameScoreLogPath = Paths.get(args[1]);
+      OutputKbn outputKbn = OutputKbn.from(args[0]);
+
+      Path gameEntryLogPath = Paths.get(args[1]);
+      Path gameScoreLogPath = Paths.get(args[2]);
 
       Map<String, String> entryLog = gameEntryLog(gameEntryLogPath);
-
-      OutputKbn outputKbn = args.length > 2 ? OutputKbn.from(args[2]) : OutputKbn.userRanking;
 
       switch (outputKbn) {
         case userRanking:
@@ -90,11 +90,14 @@ public class Ranking {
           outputRankingData(rankingDataPerGame);
           break;
         case userGamePerRanking:
+          Path gameKbnPath = Paths.get(args[3]);
+          Map<String, String> gameKbns = getGameKbn(gameKbnPath);
+
           Map<String, Map<String, Optional<String[]>>> maxScoreLogPerGamePerUser =
               getMaxScoreLogPerGamePerUser(gameScoreLogPath);
           maxScoreLogPerGamePerUser = sortRankingScoreLogPerGamePerUser(maxScoreLogPerGamePerUser);
           Map<String, String> userGamePerRankingData =
-              getUserGamePerRankingData(maxScoreLogPerGamePerUser, entryLog);
+              getUserGamePerRankingData(maxScoreLogPerGamePerUser, entryLog, gameKbns);
           outputRankingDataPerUserGame(userGamePerRankingData);
           break;
       }
@@ -112,28 +115,46 @@ public class Ranking {
    * @param args
    */
   private static void validateArgs(String[] args) {
-    if (args == null || args.length < 2) {
+
+    if (args == null || args.length < 3) {
       throw new IllegalArgumentException("invalid args");
     }
 
-    if (Files.notExists(Paths.get(args[0]))) {
-      throw new IllegalArgumentException("not exists args File " + "args[0]:" + args[0]);
+    if (OutputKbn.from(args[0]) == null) {
+      throw new IllegalArgumentException("not exists args outputKbn " + "args[0]:" + args[0]);
     }
 
     if (Files.notExists(Paths.get(args[1]))) {
-      throw new IllegalArgumentException("not exists args File " + "args[1]:" + args[1]);
+      throw new IllegalArgumentException(
+          "not exists args gameEntryLogPath " + "args[1]:" + args[1]);
     }
 
-    if (args.length > 2 && OutputKbn.from(args[2]) == null) {
-      throw new IllegalArgumentException("not exists args outputKbn " + "args[2]:" + args[2]);
+    if (Files.notExists(Paths.get(args[2]))) {
+      throw new IllegalArgumentException(
+          "not exists args gameScoreLogPath " + "args[2]:" + args[2]);
     }
 
-    if (args.length > 3) {
-      try {
-        YearMonth.parse(args[3], uuuuMM);
-      } catch (Exception e) {
-        throw new IllegalArgumentException("not exists args outputKbn " + "args[3]:" + args[3], e);
-      }
+
+    switch (OutputKbn.from(args[0])) {
+      case dateSummary:
+        try {
+          if (args.length > 3) {
+            YearMonth.parse(args[3], uuuuMM);
+          }
+        } catch (Exception e) {
+          throw new IllegalArgumentException("not exists args YearMonth " + "args[3]:" + args[3],
+              e);
+        }
+        break;
+      case userGamePerRanking:
+        if (args.length < 4) {
+          throw new IllegalArgumentException("invalid args gameKbnPath");
+        }
+
+        if (Files.notExists(Paths.get(args[3]))) {
+          throw new IllegalArgumentException("not exists args gameKbnPath " + "args[3]:" + args[3]);
+        }
+      default:
     }
   }
 
@@ -146,6 +167,21 @@ public class Ranking {
    */
   private static Map<String, String> gameEntryLog(Path gameEntryLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameEntryLogPath)) {
+      return lines.skip(1).map(line -> line.split(","))
+          .sorted(Comparator.comparing(values -> values[0])).collect(toMap(values -> values[0],
+              values -> values[1], (oldVal, newVal) -> oldVal, LinkedHashMap::new));
+    }
+  }
+
+  /**
+   * エントリーログを取得
+   * 
+   * @param gameEntryLogPath
+   * @return エントリーログ
+   * @throws IOException
+   */
+  private static Map<String, String> getGameKbn(Path gameKbnPath) throws IOException {
+    try (Stream<String> lines = Files.lines(gameKbnPath)) {
       return lines.skip(1).map(line -> line.split(","))
           .sorted(Comparator.comparing(values -> values[0])).collect(toMap(values -> values[0],
               values -> values[1], (oldVal, newVal) -> oldVal, LinkedHashMap::new));
@@ -384,36 +420,47 @@ public class Ranking {
    */
   private static Map<String, String> getUserGamePerRankingData(
       Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
-      Map<String, String> gameEntryLog) {
+      Map<String, String> gameEntryLog, Map<String, String> gameKbns) {
 
     Map<String, String> rankingDataPerUser = new LinkedHashMap<>();
-    Map<String, String> rankingDataPerUser1 =
-        getUserRanking(gameEntryLog, scoreLogPerGamePerUserSorted.get("1"));
-
-    Map<String, String> rankingDataPerUser2 =
-        getUserRanking(gameEntryLog, scoreLogPerGamePerUserSorted.get("2"));
 
     String out = "";
     String playerId = "";
     String handleName = "";
-    String ranking1 = "";
-    String ranking2 = "";
 
     for (Map.Entry<String, String> gameEntry : gameEntryLog.entrySet()) {
 
       playerId = gameEntry.getKey();
       handleName = gameEntry.getValue();
 
-      ranking1 = rankingDataPerUser1.containsKey(playerId) ? rankingDataPerUser1.get(playerId) : "";
-      ranking2 = rankingDataPerUser2.containsKey(playerId) ? rankingDataPerUser2.get(playerId) : "";
+      List<String> rankings =
+          getRankings(playerId, gameKbns, scoreLogPerGamePerUserSorted, gameEntryLog);
 
-      out = playerId + "," + handleName + "," + ranking1 + "," + ranking2;
+      out = playerId + "," + handleName + "," + String.join(",", rankings);
 
       rankingDataPerUser.put(playerId, out);
 
     }
     return rankingDataPerUser;
 
+  }
+
+  private static List<String> getRankings(String playerId, Map<String, String> gameKbns,
+      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
+      Map<String, String> gameEntryLog) {
+
+    List<String> rankings = new ArrayList<>();
+
+    for (Map.Entry<String, String> gameKbn : gameKbns.entrySet()) {
+      Map<String, String> rankingDataPerUser =
+          getUserRanking(gameEntryLog, scoreLogPerGamePerUserSorted.get(gameKbn.getKey()));
+      rankings.add(getRanking(rankingDataPerUser, playerId));
+    }
+    return rankings;
+  }
+
+  private static String getRanking(Map<String, String> rankingDataPerUser, String playerId) {
+    return rankingDataPerUser.containsKey(playerId) ? rankingDataPerUser.get(playerId) : "";
   }
 
   private static Map<String, String> getUserRanking(Map<String, String> gameEntryLog,
