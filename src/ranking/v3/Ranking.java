@@ -445,6 +445,14 @@ public class Ranking {
 
   }
 
+  /**
+   * 
+   * @param playerId
+   * @param gameKbns
+   * @param scoreLogPerGamePerUserSorted
+   * @param gameEntryLog
+   * @return
+   */
   private static List<String> getRankings(String playerId, Map<String, String> gameKbns,
       Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
       Map<String, String> gameEntryLog) {
