@@ -91,13 +91,13 @@ public class Ranking {
           break;
         case userGamePerRanking:
           Path gameKbnPath = Paths.get(args[3]);
-          Map<String, String> gameKbns = getGameKbn(gameKbnPath);
+          Map<String, String> gameKbnWithNames = getGameKbnWithName(gameKbnPath);
 
           Map<String, Map<String, Optional<String[]>>> maxScoreLogPerGamePerUser =
               getMaxScoreLogPerGamePerUser(gameScoreLogPath);
           maxScoreLogPerGamePerUser = sortRankingScoreLogPerGamePerUser(maxScoreLogPerGamePerUser);
           Map<String, String> userGamePerRankingData =
-              getUserGamePerRankingData(maxScoreLogPerGamePerUser, entryLog, gameKbns);
+              getUserGamePerRankingData(maxScoreLogPerGamePerUser, entryLog, gameKbnWithNames);
           outputRankingDataPerUserGame(userGamePerRankingData);
           break;
       }
@@ -180,7 +180,7 @@ public class Ranking {
    * @return エントリーログ
    * @throws IOException
    */
-  private static Map<String, String> getGameKbn(Path gameKbnPath) throws IOException {
+  private static Map<String, String> getGameKbnWithName(Path gameKbnPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameKbnPath)) {
       return lines.skip(1).map(line -> line.split(","))
           .sorted(Comparator.comparing(values -> values[0])).collect(toMap(values -> values[0],
@@ -420,7 +420,7 @@ public class Ranking {
    */
   private static Map<String, String> getUserGamePerRankingData(
       Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
-      Map<String, String> gameEntryLog, Map<String, String> gameKbns) {
+      Map<String, String> gameEntryLog, Map<String, String> gameKbnWithNames) {
 
     Map<String, String> rankingDataPerUser = new LinkedHashMap<>();
 
@@ -434,7 +434,7 @@ public class Ranking {
       handleName = gameEntry.getValue();
 
       List<String> rankings =
-          getRankings(playerId, gameKbns, scoreLogPerGamePerUserSorted, gameEntryLog);
+          getRankings(playerId, gameKbnWithNames, scoreLogPerGamePerUserSorted, gameEntryLog);
 
       out = playerId + "," + handleName + "," + String.join(",", rankings);
 
