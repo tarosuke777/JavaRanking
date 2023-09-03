@@ -450,26 +450,25 @@ public class Ranking {
    * @param gameEntryLog
    * @return
    */
-  private static List<String> getGameScoreRankings(String playerId, Map<String, String> gameKbns,
+  private static List<String> getGameScoreRankings(String playerId,
+      Map<String, String> gameKbnWithNames,
       Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
       Map<String, String> gameEntryLog) {
 
     List<String> rankings = new ArrayList<>();
 
-    for (Map.Entry<String, String> gameKbn : gameKbns.entrySet()) {
-      Map<String, String> rankingDataPerUser =
-          getUserRanking(gameEntryLog, scoreLogPerGamePerUserSorted.get(gameKbn.getKey()));
-      rankings.add(getRanking(rankingDataPerUser, playerId));
+    for (Map.Entry<String, String> gameKbnWithName : gameKbnWithNames.entrySet()) {
+      String gameKbn = gameKbnWithName.getKey();
+      Map<String, Optional<String[]>> userWithMaxScoreLogRecord =
+          scoreLogPerGamePerUserSorted.get(gameKbn);
+      String rank = getRank(playerId, userWithMaxScoreLogRecord, gameEntryLog);
+      rankings.add(rank);
     }
     return rankings;
   }
 
-  private static String getRanking(Map<String, String> rankingDataPerUser, String playerId) {
-    return rankingDataPerUser.containsKey(playerId) ? rankingDataPerUser.get(playerId) : "";
-  }
-
-  private static Map<String, String> getUserRanking(Map<String, String> gameEntryLog,
-      Map<String, Optional<String[]>> scoreLogPerUser) {
+  private static String getRank(String playerId, Map<String, Optional<String[]>> scoreLogPerUser,
+      Map<String, String> gameEntryLog) {
 
     Map<String, String> rankingDataPerUser = new HashMap<>();
 
@@ -479,7 +478,7 @@ public class Ranking {
 
     for (Map.Entry<String, Optional<String[]>> scoreLogPerUserSet : scoreLogPerUser.entrySet()) {
 
-      String playerId = scoreLogPerUserSet.getKey();
+      String _playerId = scoreLogPerUserSet.getKey();
       String handleName = gameEntryLog.get(playerId);
       Integer score = Integer.valueOf(scoreLogPerUserSet.getValue().get()[2]);
 
@@ -496,11 +495,11 @@ public class Ranking {
         break;
       }
 
-      rankingDataPerUser.put(playerId, String.valueOf(outRank));
+      rankingDataPerUser.put(_playerId, String.valueOf(outRank));
       prevScore = score;
     }
 
-    return rankingDataPerUser;
+    return rankingDataPerUser.containsKey(playerId) ? rankingDataPerUser.get(playerId) : "";
   }
 
 
