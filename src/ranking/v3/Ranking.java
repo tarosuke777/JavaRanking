@@ -423,6 +423,9 @@ public class Ranking {
       Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUser,
       Map<String, String> gameEntryLog, Map<String, String> gameKbnWithNames) {
 
+    Map<String, Map<String, String>> gameKbnWithUserWithRank =
+        getGameKbnWithUserRank(scoreLogPerGamePerUser, gameEntryLog, gameKbnWithNames);
+
     Map<String, String> userWithRankingData = new LinkedHashMap<>();
 
     for (Map.Entry<String, String> gameEntry : gameEntryLog.entrySet()) {
@@ -430,8 +433,14 @@ public class Ranking {
       String playerId = gameEntry.getKey();
       String handleName = gameEntry.getValue();
 
-      List<String> gameScoreRankings =
-          getGameScoreRankings(playerId, gameKbnWithNames, scoreLogPerGamePerUser, gameEntryLog);
+      List<String> gameScoreRankings = new ArrayList<>();
+
+      for (Map.Entry<String, String> gameKbnWithName : gameKbnWithNames.entrySet()) {
+        String gameKbn = gameKbnWithName.getKey();
+        Map<String, String> userWithRank = gameKbnWithUserWithRank.get(gameKbn);
+        gameScoreRankings.add(userWithRank.containsKey(playerId) ? userWithRank.get(playerId) : "");
+
+      }
 
       String out = playerId + "," + handleName + "," + String.join(",", gameScoreRankings);
 
@@ -442,32 +451,22 @@ public class Ranking {
 
   }
 
-  /**
-   * 
-   * @param playerId
-   * @param gameKbns
-   * @param scoreLogPerGamePerUserSorted
-   * @param gameEntryLog
-   * @return
-   */
-  private static List<String> getGameScoreRankings(String playerId,
-      Map<String, String> gameKbnWithNames,
-      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUserSorted,
-      Map<String, String> gameEntryLog) {
-
-    List<String> rankings = new ArrayList<>();
-
+  private static Map<String, Map<String, String>> getGameKbnWithUserRank(
+      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUser,
+      Map<String, String> gameEntryLog, Map<String, String> gameKbnWithNames) {
+    Map<String, Map<String, String>> gameKbnWithUserWithRank = new HashMap<>();
     for (Map.Entry<String, String> gameKbnWithName : gameKbnWithNames.entrySet()) {
       String gameKbn = gameKbnWithName.getKey();
       Map<String, Optional<String[]>> userWithMaxScoreLogRecord =
-          scoreLogPerGamePerUserSorted.get(gameKbn);
-      String rank = getRank(playerId, userWithMaxScoreLogRecord, gameEntryLog);
-      rankings.add(rank);
+          scoreLogPerGamePerUser.get(gameKbn);
+      Map<String, String> userWithRank = getRank(userWithMaxScoreLogRecord, gameEntryLog);
+      gameKbnWithUserWithRank.put(gameKbn, userWithRank);
     }
-    return rankings;
+    return gameKbnWithUserWithRank;
   }
 
-  private static String getRank(String playerId, Map<String, Optional<String[]>> scoreLogPerUser,
+
+  private static Map<String, String> getRank(Map<String, Optional<String[]>> scoreLogPerUser,
       Map<String, String> gameEntryLog) {
 
     Map<String, String> rankingDataPerUser = new HashMap<>();
@@ -478,7 +477,7 @@ public class Ranking {
 
     for (Map.Entry<String, Optional<String[]>> scoreLogPerUserSet : scoreLogPerUser.entrySet()) {
 
-      String _playerId = scoreLogPerUserSet.getKey();
+      String playerId = scoreLogPerUserSet.getKey();
       String handleName = gameEntryLog.get(playerId);
       Integer score = Integer.valueOf(scoreLogPerUserSet.getValue().get()[2]);
 
@@ -495,11 +494,11 @@ public class Ranking {
         break;
       }
 
-      rankingDataPerUser.put(_playerId, String.valueOf(outRank));
+      rankingDataPerUser.put(playerId, String.valueOf(outRank));
       prevScore = score;
     }
 
-    return rankingDataPerUser.containsKey(playerId) ? rankingDataPerUser.get(playerId) : "";
+    return rankingDataPerUser;
   }
 
 
