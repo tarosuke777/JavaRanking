@@ -91,14 +91,14 @@ public class Ranking {
           break;
         case userGamePerRanking:
           Path gameKbnPath = Paths.get(args[3]);
-          Map<String, String> gameKbnWithNames = getGameKbnWithName(gameKbnPath);
+          Map<String, String> gameKbnToName = getGameKbnToName(gameKbnPath);
 
-          Map<String, Map<String, Optional<String[]>>> maxScoreLogPerGamePerUser =
-              getMaxScoreLogPerGamePerUser(gameScoreLogPath);
-          maxScoreLogPerGamePerUser = sortRankingScoreLogPerGamePerUser(maxScoreLogPerGamePerUser);
-          Map<String, String> userGamePerRankingData =
-              getUserGamePerRankingData(maxScoreLogPerGamePerUser, entryLog, gameKbnWithNames);
-          outputRankingDataPerUserGame(userGamePerRankingData);
+          Map<String, Map<String, Optional<String[]>>> gameKbnToUserToScoreLog =
+              getGameKbnToUserToMaxScoreLog(gameScoreLogPath);
+          gameKbnToUserToScoreLog = sortScoreLog(gameKbnToUserToScoreLog);
+          Map<String, String> userToRankingData =
+              getUserToRankingData(gameKbnToUserToScoreLog, entryLog, gameKbnToName);
+          outputUserGamePerRanking(userToRankingData);
           break;
       }
 
@@ -180,7 +180,7 @@ public class Ranking {
    * @return エントリーログ
    * @throws IOException
    */
-  private static Map<String, String> getGameKbnWithName(Path gameKbnPath) throws IOException {
+  private static Map<String, String> getGameKbnToName(Path gameKbnPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameKbnPath)) {
       return lines.skip(1).map(line -> line.split(","))
           .sorted(Comparator.comparing(values -> values[0])).collect(toMap(values -> values[0],
@@ -211,7 +211,7 @@ public class Ranking {
    * @return 最高スコアログ
    * @throws IOException
    */
-  private static Map<String, Map<String, Optional<String[]>>> getMaxScoreLogPerGamePerUser(
+  private static Map<String, Map<String, Optional<String[]>>> getGameKbnToUserToMaxScoreLog(
       Path gameScoreLogPath) throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
@@ -276,7 +276,7 @@ public class Ranking {
    * @param scoreLogPerUser
    * @return ユーザ単位のスコアログ
    */
-  private static Map<String, Map<String, Optional<String[]>>> sortRankingScoreLogPerGamePerUser(
+  private static Map<String, Map<String, Optional<String[]>>> sortScoreLog(
       Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUser) {
 
     Comparator<Map.Entry<String, Optional<String[]>>> playerIdComparator =
@@ -419,14 +419,14 @@ public class Ranking {
    * @param scoreLogPerUserSorted
    * @return 平均ランキングデータ
    */
-  private static Map<String, String> getUserGamePerRankingData(
-      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUser,
-      Map<String, String> gameEntryLog, Map<String, String> gameKbnWithNames) {
+  private static Map<String, String> getUserToRankingData(
+      Map<String, Map<String, Optional<String[]>>> gameKbnToUserToScoreLog,
+      Map<String, String> gameEntryLog, Map<String, String> gameKbnToName) {
 
-    Map<String, Map<String, String>> gameKbnWithUserWithRank =
-        getGameKbnWithUserRank(scoreLogPerGamePerUser, gameEntryLog, gameKbnWithNames);
+    Map<String, Map<String, String>> gameKbnToUserToRank =
+        getGameKbnToUserToRank(gameKbnToUserToScoreLog, gameEntryLog, gameKbnToName);
 
-    Map<String, String> userWithRankingData = new LinkedHashMap<>();
+    Map<String, String> userToRankingData = new LinkedHashMap<>();
 
     for (Map.Entry<String, String> gameEntry : gameEntryLog.entrySet()) {
 
@@ -435,34 +435,35 @@ public class Ranking {
 
       List<String> gameScoreRankings = new ArrayList<>();
 
-      for (Map.Entry<String, String> gameKbnWithName : gameKbnWithNames.entrySet()) {
+      for (Map.Entry<String, String> gameKbnWithName : gameKbnToName.entrySet()) {
         String gameKbn = gameKbnWithName.getKey();
-        Map<String, String> userWithRank = gameKbnWithUserWithRank.get(gameKbn);
-        gameScoreRankings.add(userWithRank.containsKey(playerId) ? userWithRank.get(playerId) : "");
+        Map<String, String> userToRank = gameKbnToUserToRank.get(gameKbn);
+        gameScoreRankings.add(userToRank.containsKey(playerId) ? userToRank.get(playerId) : "");
 
       }
 
       String out = playerId + "," + handleName + "," + String.join(",", gameScoreRankings);
 
-      userWithRankingData.put(playerId, out);
+      userToRankingData.put(playerId, out);
 
     }
-    return userWithRankingData;
+    return userToRankingData;
 
   }
 
-  private static Map<String, Map<String, String>> getGameKbnWithUserRank(
-      Map<String, Map<String, Optional<String[]>>> scoreLogPerGamePerUser,
-      Map<String, String> gameEntryLog, Map<String, String> gameKbnWithNames) {
-    Map<String, Map<String, String>> gameKbnWithUserWithRank = new HashMap<>();
-    for (Map.Entry<String, String> gameKbnWithName : gameKbnWithNames.entrySet()) {
-      String gameKbn = gameKbnWithName.getKey();
-      Map<String, Optional<String[]>> userWithMaxScoreLogRecord =
-          scoreLogPerGamePerUser.get(gameKbn);
-      Map<String, String> userWithRank = getRank(userWithMaxScoreLogRecord, gameEntryLog);
-      gameKbnWithUserWithRank.put(gameKbn, userWithRank);
+  private static Map<String, Map<String, String>> getGameKbnToUserToRank(
+      Map<String, Map<String, Optional<String[]>>> gameKbnToUserToScoreLog,
+      Map<String, String> gameEntryLog, Map<String, String> gameKbnToName) {
+
+    Map<String, Map<String, String>> gameKbnToUserToRank = new HashMap<>();
+
+    for (String gameKbn : gameKbnToName.keySet()) {
+      Map<String, Optional<String[]>> userToScoreLog =
+          gameKbnToUserToScoreLog.get(gameKbn);
+      Map<String, String> userToRank = getRank(userToScoreLog, gameEntryLog);
+      gameKbnToUserToRank.put(gameKbn, userToRank);
     }
-    return gameKbnWithUserWithRank;
+    return gameKbnToUserToRank;
   }
 
 
@@ -564,7 +565,7 @@ public class Ranking {
    * 
    * @param rankingData
    */
-  private static void outputRankingDataPerUserGame(Map<String, String> rankingDataPerGame) {
+  private static void outputUserGamePerRanking(Map<String, String> rankingDataPerGame) {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
 
