@@ -429,27 +429,18 @@ public class Ranking {
       Map<String, Map<String, String>> gameKbnToPlayerIdToRank, Map<String, String> gameEntryLog,
       Map<String, String> gameKbnToName) {
 
-    List<String> rankingData = new ArrayList<>();
+    return gameEntryLog.entrySet().stream().map(gameEntryLog_ -> {
+      String playerId = gameEntryLog_.getKey();
+      String handleName = gameEntryLog_.getValue();
 
-    for (Map.Entry<String, String> gameEntry : gameEntryLog.entrySet()) {
-
-      String playerId = gameEntry.getKey();
-      String handleName = gameEntry.getValue();
-
-      List<String> gameScoreRankings = new ArrayList<>();
-
-      for (String gameKbn : gameKbnToName.keySet()) {
+      List<String> gameScoreRankings = gameKbnToName.keySet().stream().map(gameKbn -> {
         Map<String, String> userToRank = gameKbnToPlayerIdToRank.get(gameKbn);
-        gameScoreRankings.add(userToRank.containsKey(playerId) ? userToRank.get(playerId) : "");
-      }
+        return userToRank.containsKey(playerId) ? userToRank.get(playerId) : "";
+      }).collect(Collectors.toList());
 
-      String out = playerId + "," + handleName + "," + String.join(",", gameScoreRankings);
+      return playerId + "," + handleName + "," + String.join(",", gameScoreRankings);
 
-      rankingData.add(out);
-
-    }
-    return rankingData;
-
+    }).collect(Collectors.toList());
   }
 
   private static Map<String, Map<String, String>> getGameKbnToPlayerIdToRank(
@@ -458,11 +449,12 @@ public class Ranking {
 
     Map<String, Map<String, String>> gameKbnToPlayerIdToRank = new HashMap<>();
 
-    for (String gameKbn : gameKbnToName.keySet()) {
+    gameKbnToName.keySet().stream().forEach(gameKbn -> {
       Map<String, Optional<String[]>> playerIdToScoreLog = gameKbnToPlayerIdToScoreLog.get(gameKbn);
       Map<String, String> playerIdToRank = getPlayerIdToRank(playerIdToScoreLog, gameEntryLog);
       gameKbnToPlayerIdToRank.put(gameKbn, playerIdToRank);
-    }
+    });
+
     return gameKbnToPlayerIdToRank;
   }
 
