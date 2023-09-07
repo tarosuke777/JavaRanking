@@ -31,12 +31,11 @@ public class Ranking {
       Path gameEntryLogPath = Paths.get(args[0]);
       Path gameScoreLogPath = Paths.get(args[1]);
 
-      Map<String, String> entryLog = gameEntryLog(gameEntryLogPath);
-      Map<String, String[]> maxScoreLogPerUser = getMaxScoreLogPerUser(gameScoreLogPath);
+      Map<String, String> gameEntryLog = gameEntryLog(gameEntryLogPath);
+      Map<String, String[]> playerIdToMaxScoreLog = getPlayerIdToMaxScoreLog(gameScoreLogPath);
+      Map<String, String[]> playerIdToMaxScoreLogSorted = sortPlayerId(playerIdToMaxScoreLog);
 
-      maxScoreLogPerUser = sortRankingScoreLogPerUser(maxScoreLogPerUser);
-
-      List<String> rankingData = getRankingData(maxScoreLogPerUser, entryLog);
+      List<String> rankingData = getRankingData(playerIdToMaxScoreLogSorted, gameEntryLog);
 
       outputRankingData(rankingData);
 
@@ -87,7 +86,7 @@ public class Ranking {
    * @return 最高スコアログ
    * @throws IOException
    */
-  private static Map<String, String[]> getMaxScoreLogPerUser(Path gameScoreLogPath)
+  private static Map<String, String[]> getPlayerIdToMaxScoreLog(Path gameScoreLogPath)
       throws IOException {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       return lines.skip(1).map(line -> line.split(","))
@@ -102,8 +101,7 @@ public class Ranking {
    * @param scoreLogPerUser
    * @return ユーザ単位のスコアログ
    */
-  private static Map<String, String[]> sortRankingScoreLogPerUser(
-      Map<String, String[]> scoreLogPerUser) {
+  private static Map<String, String[]> sortPlayerId(Map<String, String[]> scoreLogPerUser) {
 
     Comparator<Map.Entry<String, String[]>> valueComparator = Map.Entry.comparingByValue(
         Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
@@ -118,20 +116,21 @@ public class Ranking {
   /**
    * ランキングデータを取得
    * 
-   * @param scoreLogPerUserSorted
+   * @param playerIdToScoreLogSorted
    * @return ランキングデータ
    */
-  private static List<String> getRankingData(Map<String, String[]> scoreLogPerUserSorted,
+  private static List<String> getRankingData(Map<String, String[]> playerIdToScoreLogSorted,
       Map<String, String> gameEntryLog) {
     int prevScore = 0;
     int rank = 0;
     int outRank = 0;
     List<String> rankingData = new ArrayList<>();
-    for (Map.Entry<String, String[]> scoreLog : scoreLogPerUserSorted.entrySet()) {
+    for (Map.Entry<String, String[]> playerIdToScoreLogSorted_ : playerIdToScoreLogSorted
+        .entrySet()) {
 
-      String playerId = scoreLog.getKey();
+      String playerId = playerIdToScoreLogSorted_.getKey();
       String handleName = gameEntryLog.get(playerId);
-      Integer score = Integer.valueOf(scoreLog.getValue()[2]);
+      Integer score = Integer.valueOf(playerIdToScoreLogSorted_.getValue()[2]);
 
       if (handleName == null) {
         continue;
