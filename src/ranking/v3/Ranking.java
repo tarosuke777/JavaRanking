@@ -95,9 +95,15 @@ public class Ranking {
 
           Map<String, Map<String, Optional<String[]>>> gameKbnToPlayerIdToScoreLog =
               getGameKbnToPlayerIdToMaxScoreLog(gameScoreLogPath);
-          gameKbnToPlayerIdToScoreLog = sortScoreLog(gameKbnToPlayerIdToScoreLog);
+
+          Map<String, Map<String, Optional<String[]>>> gameKbnToPlayerIdToScoreLogSorted =
+              sortScoreLog(gameKbnToPlayerIdToScoreLog);
+
+          Map<String, Map<String, String>> gameKbnToPlayerIdToRank = getGameKbnToPlayerIdToRank(
+              gameKbnToPlayerIdToScoreLogSorted, entryLog, gameKbnToName);
+
           List<String> rankingData =
-              getPlayerIdToRankingData(gameKbnToPlayerIdToScoreLog, entryLog, gameKbnToName);
+              getPlayerIdToRankingData(gameKbnToPlayerIdToRank, entryLog, gameKbnToName);
           outputPlayerIdGamePerRanking(rankingData);
           break;
       }
@@ -420,11 +426,8 @@ public class Ranking {
    * @return 平均ランキングデータ
    */
   private static List<String> getPlayerIdToRankingData(
-      Map<String, Map<String, Optional<String[]>>> gameKbnToPlayerIdToScoreLog,
-      Map<String, String> gameEntryLog, Map<String, String> gameKbnToName) {
-
-    Map<String, Map<String, String>> gameKbnToPlayerIdToRank =
-        getGameKbnToPlayerIdToRank(gameKbnToPlayerIdToScoreLog, gameEntryLog, gameKbnToName);
+      Map<String, Map<String, String>> gameKbnToPlayerIdToRank, Map<String, String> gameEntryLog,
+      Map<String, String> gameKbnToName) {
 
     List<String> rankingData = new ArrayList<>();
 
