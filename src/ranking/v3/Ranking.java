@@ -447,15 +447,10 @@ public class Ranking {
       Map<String, Map<String, Optional<String[]>>> gameKbnToPlayerIdToScoreLog,
       Map<String, String> gameEntryLog, Map<String, String> gameKbnToName) {
 
-    Map<String, Map<String, String>> gameKbnToPlayerIdToRank = new HashMap<>();
-
-    gameKbnToName.keySet().stream().forEach(gameKbn -> {
+    return gameKbnToName.keySet().stream().collect(Collectors.toMap(gameKbn -> gameKbn, gameKbn -> {
       Map<String, Optional<String[]>> playerIdToScoreLog = gameKbnToPlayerIdToScoreLog.get(gameKbn);
-      Map<String, String> playerIdToRank = getPlayerIdToRank(playerIdToScoreLog, gameEntryLog);
-      gameKbnToPlayerIdToRank.put(gameKbn, playerIdToRank);
-    });
-
-    return gameKbnToPlayerIdToRank;
+      return getPlayerIdToRank(playerIdToScoreLog, gameEntryLog);
+    }));
   }
 
 
