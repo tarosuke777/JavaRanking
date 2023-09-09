@@ -263,10 +263,13 @@ public class Ranking {
   private static Map<String, String[]> sortRankingScoreLogPerUser(
       Map<String, String[]> scoreLogPerUser) {
 
-    Comparator<Map.Entry<String, String[]>> scoreComparator = Map.Entry.comparingByValue(
-        Comparator.comparing(values -> Integer.valueOf(values[2]), Comparator.reverseOrder()));
+    Function<String[], Integer> getScoreToInt = values -> Integer.valueOf(values[2]);
+    Function<String[], Integer> getGameKbnToInt = values -> Integer.valueOf(values[3]);
+
+    Comparator<Map.Entry<String, String[]>> scoreComparator =
+        Map.Entry.comparingByValue(Comparator.comparing(getScoreToInt, Comparator.reverseOrder()));
     Comparator<Map.Entry<String, String[]>> gameKbnComparator =
-        Map.Entry.comparingByValue(Comparator.comparing(values -> Integer.valueOf(values[3])));
+        Map.Entry.comparingByValue(Comparator.comparing(getGameKbnToInt));
     Comparator<Map.Entry<String, String[]>> playerIdComparator = Map.Entry.comparingByKey();
 
     return scoreLogPerUser.entrySet().stream()
@@ -275,6 +278,7 @@ public class Ranking {
             LinkedHashMap::new));
 
   }
+
 
   /**
    * ユーザ単位のスコアログをランキング用にソート
