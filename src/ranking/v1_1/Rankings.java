@@ -36,12 +36,12 @@ public class Rankings {
   }
 
 
-  public void toCsvForConsole() {
+  public String toCsvWithHeader() {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
     sb.append("rank,id,totalScore" + lineFeedCode);
     this.rankingData.forEach(ranking -> sb.append(ranking.toCsv() + lineFeedCode));
-    System.out.print(sb.toString());
+    return sb.toString();
   }
 
 }
