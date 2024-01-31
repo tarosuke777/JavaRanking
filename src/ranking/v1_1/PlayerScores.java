@@ -14,14 +14,14 @@ class PlayerScores {
   private List<PlayerScore> playerScores;
 
   PlayerScores(ScoreLogs scoreLogs) {
-    Map<String, Integer> playerIdWithSumScore = scoreLogs.getScoreLogs().stream()
+    Map<String, Integer> playerIdWithSumScore = scoreLogs.scoreLogs().stream()
         .collect(Collectors.groupingBy(ScoreLog::playerId, Collectors.summingInt(ScoreLog::score)));
 
     this.playerScores = playerIdWithSumScore.entrySet().stream()
         .map(set -> new PlayerScore(set.getKey(), set.getValue())).collect(Collectors.toList());
   }
 
-  List<PlayerScore> getPlayerScores() {
+  List<PlayerScore> playerScores() {
     return this.playerScores;
   }
 

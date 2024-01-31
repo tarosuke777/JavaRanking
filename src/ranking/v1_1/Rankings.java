@@ -18,7 +18,7 @@ class Rankings {
 
   Rankings(PlayerScores playerScores) {
 
-    List<PlayerScore> playerScoresSorted = playerScores.getPlayerScores().stream()
+    List<PlayerScore> playerScoresSorted = playerScores.playerScores().stream()
         .sorted(Comparator.comparing(PlayerScore::score).reversed()
             .thenComparing(Comparator.comparing(PlayerScore::playerId)))
         .collect(Collectors.toList());

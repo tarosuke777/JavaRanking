@@ -22,7 +22,7 @@ class ScoreLogs {
         .collect(Collectors.toList());
   }
 
-  List<ScoreLog> getScoreLogs() {
+  List<ScoreLog> scoreLogs() {
     return this.scoreLogs;
   }
 }
