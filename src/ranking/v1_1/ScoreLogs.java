@@ -8,6 +8,9 @@ import java.util.stream.Stream;
 
 class ScoreLogs {
 
+  record ScoreLog(LocalDate date, String playerId, int score) {
+  }
+
   private List<ScoreLog> scoreLogs;
 
   ScoreLogs(Stream<String> lines) {

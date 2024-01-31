@@ -3,8 +3,13 @@ package ranking.v1_1;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import ranking.v1_1.ScoreLogs.ScoreLog;
 
 class PlayerScores {
+
+  record PlayerScore(String playerId, int score) {
+  }
+
 
   private List<PlayerScore> playerScores;
 

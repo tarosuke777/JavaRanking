@@ -4,8 +4,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import ranking.v1_1.PlayerScores.PlayerScore;
 
 class Rankings {
+
+  record Ranking(int rank, String playerId, int score) {
+    String toCsv() {
+      return this.rank + "," + this.playerId + "," + this.score;
+    }
+  }
 
   private List<Ranking> rankingData = new ArrayList<Ranking>();
 
