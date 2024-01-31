@@ -9,8 +9,8 @@ public class PlayerScores {
   private List<PlayerScore> playerScores;
 
   public PlayerScores(ScoreLogs scoreLogs) {
-    Map<String, Integer> playerIdWithSumScore = scoreLogs.getScoreLogs().stream().collect(
-        Collectors.groupingBy(ScoreLog::getPlayerId, Collectors.summingInt(ScoreLog::getScore)));
+    Map<String, Integer> playerIdWithSumScore = scoreLogs.getScoreLogs().stream()
+        .collect(Collectors.groupingBy(ScoreLog::playerId, Collectors.summingInt(ScoreLog::score)));
 
     this.playerScores = playerIdWithSumScore.entrySet().stream()
         .map(set -> new PlayerScore(set.getKey(), set.getValue())).collect(Collectors.toList());

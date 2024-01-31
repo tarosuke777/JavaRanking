@@ -12,8 +12,8 @@ public class Rankings {
   public Rankings(PlayerScores playerScores) {
 
     List<PlayerScore> playerScoresSorted = playerScores.getPlayerScores().stream()
-        .sorted(Comparator.comparing(PlayerScore::getScore).reversed()
-            .thenComparing(Comparator.comparing(PlayerScore::getPlayerId)))
+        .sorted(Comparator.comparing(PlayerScore::score).reversed()
+            .thenComparing(Comparator.comparing(PlayerScore::playerId)))
         .collect(Collectors.toList());
 
     int rank = 0;
@@ -21,16 +21,16 @@ public class Rankings {
 
     for (PlayerScore playLog : playerScoresSorted) {
 
-      if (playLog.getScore() != prevScore) {
+      if (playLog.score() != prevScore) {
         rank += 1;
       }
       if (rank > 10) {
         break;
       }
 
-      prevScore = playLog.getScore();
+      prevScore = playLog.score();
 
-      this.rankingData.add(new Ranking(rank, playLog.getPlayerId(), playLog.getScore()));
+      this.rankingData.add(new Ranking(rank, playLog.playerId(), playLog.score()));
 
     }
   }
