@@ -5,11 +5,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Rankings {
+class Rankings {
 
   private List<Ranking> rankingData = new ArrayList<Ranking>();
 
-  public Rankings(PlayerScores playerScores) {
+  Rankings(PlayerScores playerScores) {
 
     List<PlayerScore> playerScoresSorted = playerScores.getPlayerScores().stream()
         .sorted(Comparator.comparing(PlayerScore::score).reversed()
@@ -36,7 +36,7 @@ public class Rankings {
   }
 
 
-  public String toCsvWithHeader() {
+  String toCsvWithHeader() {
     String lineFeedCode = "\n";
     StringBuilder sb = new StringBuilder();
     sb.append("rank,id,totalScore" + lineFeedCode);

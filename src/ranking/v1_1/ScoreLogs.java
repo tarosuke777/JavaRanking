@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ScoreLogs {
+class ScoreLogs {
 
   private List<ScoreLog> scoreLogs;
 
-  public ScoreLogs(Stream<String> lines) {
+  ScoreLogs(Stream<String> lines) {
     this.scoreLogs = lines.skip(1) // header
         .map(line -> line.split(","))
         .map(values -> new ScoreLog(
@@ -19,7 +19,7 @@ public class ScoreLogs {
         .collect(Collectors.toList());
   }
 
-  public List<ScoreLog> getScoreLogs() {
+  List<ScoreLog> getScoreLogs() {
     return this.scoreLogs;
   }
 }
