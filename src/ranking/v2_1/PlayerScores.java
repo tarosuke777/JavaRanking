@@ -1,7 +1,9 @@
 package ranking.v2_1;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PlayerScores {
@@ -18,11 +20,13 @@ public class PlayerScores {
         scores.scores().stream().map(score -> new PlayerScore(score.playerId(), score.score()))
             .collect(Collectors.toList());
 
-    Map<String, Integer> playerIdWithScore = playerScores.stream().collect(
-        Collectors.groupingBy(PlayerScore::playerId, Collectors.summingInt(PlayerScore::score)));
+    Map<String, Optional<PlayerScores.PlayerScore>> playerIdWithScore =
+        playerScores.stream().collect(Collectors.groupingBy(PlayerScore::playerId,
+            Collectors.maxBy(Comparator.comparing(PlayerScore::score))));
 
     this.playerScores = playerIdWithScore.entrySet().stream()
-        .map(set -> new PlayerScore(set.getKey(), set.getValue())).collect(Collectors.toList());
+        .map(set -> new PlayerScore(set.getKey(), set.getValue().get().score()))
+        .collect(Collectors.toList());
 
   }
 
