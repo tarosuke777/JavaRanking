@@ -20,11 +20,11 @@ public class PlayerScores {
         scores.scores().stream().map(score -> new PlayerScore(score.playerId(), score.score()))
             .collect(Collectors.toList());
 
-    Map<String, Optional<PlayerScores.PlayerScore>> playerIdWithScore =
+    Map<String, Optional<PlayerScores.PlayerScore>> playerIdWithMaxScore =
         playerScores.stream().collect(Collectors.groupingBy(PlayerScore::playerId,
             Collectors.maxBy(Comparator.comparing(PlayerScore::score))));
 
-    this.playerScores = playerIdWithScore.entrySet().stream()
+    this.playerScores = playerIdWithMaxScore.entrySet().stream()
         .map(set -> new PlayerScore(set.getKey(), set.getValue().get().score()))
         .collect(Collectors.toList());
 
