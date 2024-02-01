@@ -21,7 +21,7 @@ public class Main {
       Scores scores = new Scores(Paths.get(args[1]));
       PlayerScores playerScores = new PlayerScores(scores);
       Rankings rankings = new Rankings(players, playerScores);
-      System.out.println(rankings.toCsvWithHeader());
+      System.out.print(rankings.toCsvWithHeader());
 
 
     } catch (Exception e) {
