@@ -20,7 +20,7 @@ public class Scores {
     try (Stream<String> lines = Files.lines(gameScoreLogPath)) {
       this.scores = lines.skip(1).map(line -> line.split(","))
           .map(values -> new Score(
-              LocalDate.parse(values[0], DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")),
+              LocalDate.parse(values[0], DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")),
               values[1], Integer.parseInt(values[2])))
           .collect(Collectors.toList());
     }
