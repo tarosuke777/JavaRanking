@@ -28,22 +28,26 @@ public class Rankings {
 
 
     int rank = 0;
+    int dispRank = 0;
     int prevScore = 0;
 
     for (PlayerScore playerScore : sortedPlayerScores) {
 
+      rank++;
       if (playerScore.score() != prevScore) {
-        rank += 1;
+        dispRank = rank;
       }
       if (rank > 10) {
         break;
       }
 
+
       prevScore = playerScore.score();
 
       String handleName = players.player(playerScore.playerId()).handleName();
 
-      this.rankings.add(new Ranking(rank, playerScore.playerId(), handleName, playerScore.score()));
+      this.rankings
+          .add(new Ranking(dispRank, playerScore.playerId(), handleName, playerScore.score()));
 
     }
   }
