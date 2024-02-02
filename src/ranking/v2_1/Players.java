@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,10 +27,9 @@ public class Players {
     return this.players;
   }
 
-  public Player player(String playerId) {
+  public Optional<Player> player(String playerId) {
 
-    return this.players.stream().filter(player -> player.playerId.equals(playerId)).findFirst()
-        .get();
+    return this.players.stream().filter(player -> player.playerId.equals(playerId)).findFirst();
 
   }
 

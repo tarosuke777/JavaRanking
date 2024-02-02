@@ -3,8 +3,10 @@ package ranking.v2_1;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import ranking.v2_1.PlayerScores.PlayerScore;
+import ranking.v2_1.Players.Player;
 
 public class Rankings {
 
@@ -33,6 +35,14 @@ public class Rankings {
 
     for (PlayerScore playerScore : sortedPlayerScores) {
 
+      Optional<Player> player = players.player(playerScore.playerId());
+
+      if (player.isEmpty()) {
+        continue;
+      }
+
+      String handleName = player.get().handleName();
+
       rank++;
       if (playerScore.score() != prevScore) {
         dispRank = rank;
@@ -43,8 +53,6 @@ public class Rankings {
 
 
       prevScore = playerScore.score();
-
-      String handleName = players.player(playerScore.playerId()).handleName();
 
       this.rankings
           .add(new Ranking(dispRank, playerScore.playerId(), handleName, playerScore.score()));
