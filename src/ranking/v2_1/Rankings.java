@@ -47,7 +47,7 @@ public class Rankings {
       if (playerScore.score() != prevScore) {
         dispRank = rank;
       }
-      if (rank > 10) {
+      if (dispRank > 10) {
         break;
       }
 
